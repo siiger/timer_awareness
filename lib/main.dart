@@ -1,33 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:timer_awareness/bloc_notification/notification_bloc.dart';
+import 'package:timer_awareness/bloc_timer_settings/timer_settings_bloc.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:timer_awareness/timer_page.dart';
 import 'package:timer_awareness/routes.dart';
+import 'package:timer_awareness/service_locator.dart';
+import 'package:timer_awareness/notification_service.dart';
+import 'package:timer_awareness/widgets/notifications_home_page.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() async {
-  AwesomeNotifications().initialize('resource://drawable/res_app_icon', []);
+  WidgetsFlutterBinding.ensureInitialized();
+  await setupLocator();
 
   runApp(App());
 }
 
 class App extends StatelessWidget {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey();
   static Color mainColor = Color(0xFF9D50DD);
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: _navigatorKey,
-      routes: materialRoutes,
-      theme: ThemeData(
-        primaryColor: Color.fromRGBO(109, 234, 255, 1),
-        accentColor: Color.fromRGBO(72, 74, 126, 1),
-        brightness: Brightness.dark,
-      ),
-      title: 'Timer Awareness',
-      home: BlocProvider(
-        create: (context) => NotificationService(navigatorKey: _navigatorKey),
-        child: TimerPage(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+            create: (context) => NotificationTimerSettings(
+                notificationService: sl<NotificationService>(),
+                audioPlayer: sl<AudioPlayer>())
+              ..add(InitSettings()),
+            child: TimerPage()),
+      ],
+      child: MaterialApp(
+        navigatorKey: sl<GlobalKey>(),
+        routes: materialRoutes,
+        theme: ThemeData(
+          primaryColor: Color.fromRGBO(109, 234, 255, 1),
+          accentColor: Color.fromRGBO(72, 74, 126, 1),
+          brightness: Brightness.dark,
+        ),
+        title: 'Norbu-Timer',
+        home: NotificationHomePage(),
       ),
     );
   }

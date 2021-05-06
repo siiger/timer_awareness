@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:timer_awareness/bloc_notification/notification_bloc.dart';
+import 'package:timer_awareness/bloc_timer_settings/timer_settings_bloc.dart';
 import 'package:timer_awareness/core/constants.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:intl/intl.dart';
+import 'package:timer_awareness/widgets/custom_container.dart';
+import 'package:easy_debounce/easy_debounce.dart';
 
 class TimerPage extends StatelessWidget {
   @override
@@ -20,15 +22,17 @@ class TimerPage extends StatelessWidget {
                   child: Column(children: <Widget>[
                     _AcceptSwitchButton(),
                     SizedBox(height: 30),
+                    _MessagesTextField(),
+                    SizedBox(height: 50),
                     _IntervalTimeRadioButtons(),
-                    SizedBox(height: 30),
+                    SizedBox(height: 50),
                     _SoundSourceRadioButtons(),
-                    SizedBox(height: 30),
-                    _VibrationLevelRadioButtons(),
-                    SizedBox(height: 30),
+                    //SizedBox(height: 30),
+                    //_VibrationLevelRadioButtons(),
+                    SizedBox(height: 50),
                     _TurnOffCheckboxes(),
-                    SizedBox(height: 30),
-                    _DaysOffToggleButtons(),
+                    SizedBox(height: 50),
+                    //_DaysOffToggleButtons(),
                   ]),
                 ))));
   }
@@ -78,7 +82,7 @@ class TimerPage extends StatelessWidget {
 class _AcceptSwitchButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationService, NotificationState>(
+    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
         buildWhen: (previous, current) => previous.isActive != current.isActive,
         builder: (context, state) {
           return Center(
@@ -88,12 +92,12 @@ class _AcceptSwitchButton extends StatelessWidget {
                   children: [
                 const Padding(
                     padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: Text('Accept')),
+                    child: Text('Вкл / Выкл')),
                 Center(
                   child: Switch(
                     value: state.isActive,
                     onChanged: (value) =>
-                        BlocProvider.of<NotificationService>(context)
+                        BlocProvider.of<NotificationTimerSettings>(context)
                             .add(ToggleNotificationService()),
                     activeTrackColor: Colors.grey,
                     activeColor: Colors.amber,
@@ -104,16 +108,11 @@ class _AcceptSwitchButton extends StatelessWidget {
   }
 }
 
-class _IntervalTimeRadioButtons extends StatelessWidget {
-  bool _numberInputIsValid;
+class _MessagesTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationService, NotificationState>(
-        buildWhen: (previous, current) =>
-            previous.intervalSource != current.intervalSource ||
-            previous.preciseInterval != current.preciseInterval ||
-            previous.randomIntervalMin != current.randomIntervalMin ||
-            previous.randomIntervalMax != current.randomIntervalMax,
+    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
+        buildWhen: (previous, current) => previous.messages != current.messages,
         builder: (context, state) {
           return Center(
               child: Column(
@@ -122,158 +121,115 @@ class _IntervalTimeRadioButtons extends StatelessWidget {
                   children: [
                 const Padding(
                     padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: Center(
-                        child: Text('Interval time in minute(repeat every)'))),
+                    child: Center(child: Text('Messages'))),
+                for (int index = 0; index < 3; ++index)
+                  Container(
+                      width: 220,
+                      height: 40,
+                      child: TextField(
+                        key: PageStorageKey('Messages' + index.toString()),
+                        controller: TextEditingController()
+                          ..text = state.messages[index],
+                        keyboardType: TextInputType.text,
+                        style: Theme.of(context).textTheme.bodyText1,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10.0)),
+                          ),
+                        ),
+                        onChanged: (String val) => EasyDebounce.debounce(
+                            'my-debouncer',
+                            Duration(milliseconds: 500),
+                            () => BlocProvider.of<NotificationTimerSettings>(
+                                    context)
+                                .add(ChangedMessages(
+                                    message: val, index: index))),
+                      ))
+              ]));
+        });
+  }
+}
+
+class _IntervalTimeRadioButtons extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
+        buildWhen: (previous, current) =>
+            previous.intervalSource != current.intervalSource ||
+            previous.preciseInterval != current.preciseInterval ||
+            previous.currentSliderVolume != current.currentSliderVolume,
+        builder: (context, state) {
+          return Center(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                const Padding(
+                    padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
+                    child: Center(child: Text('Interval (repeat every)'))),
                 Center(
                   child: Row(
                     key: PageStorageKey('Interval'),
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       for (int index = 0; index < 2; ++index)
-                        Column(
+                        Row(
                             mainAxisSize: MainAxisSize.min,
                             key: PageStorageKey('Interval' + index.toString()),
                             children: [
+                              SizedBox(
+                                width: 30,
+                              ),
+                              Text(Constants.intervalMode[index].toString()),
                               Radio<int>(
                                 value: index,
                                 groupValue: state.intervalSource,
                                 onChanged: (value) => BlocProvider.of<
-                                        NotificationService>(context)
+                                        NotificationTimerSettings>(context)
                                     .add(ToggleIntervalSource(value: value)),
                               ),
-                              index == 0
-                                  ? Container(
-                                      width: 60,
-                                      height: 40,
-                                      child: Flexible(
-                                          child: TextField(
-                                        controller: TextEditingController()
-                                          ..text =
-                                              state.preciseInterval.toString(),
-                                        keyboardType: TextInputType.number,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyText1,
-                                        decoration: InputDecoration(
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(10.0)),
-                                          ),
-                                        ),
-                                        onChanged: (String val) {
-                                          final v = int.tryParse(val);
-                                          debugPrint('parsed value = $v');
-                                          if (v == null) {
-                                            _numberInputIsValid = false;
-                                          } else {
-                                            _numberInputIsValid = true;
-                                            BlocProvider.of<
-                                                        NotificationService>(
-                                                    context)
-                                                .add(ChangedPreciseInterval(
-                                                    interval: v));
-                                          }
-                                        },
-                                      )))
-                                  : Row(
-                                      key: PageStorageKey('Interval11'),
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                          SizedBox(
-                                            width: 30,
-                                          ),
-                                          Container(
-                                              width: 60,
-                                              height: 40,
-                                              child: Flexible(
-                                                  child: TextField(
-                                                controller:
-                                                    TextEditingController()
-                                                      ..text = state
-                                                          .randomIntervalMin
-                                                          .toString(),
-                                                keyboardType:
-                                                    TextInputType.number,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyText1,
-                                                decoration: InputDecoration(
-                                                  border: OutlineInputBorder(
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(
-                                                                10.0)),
-                                                  ),
-                                                ),
-                                                onChanged: (String val) {
-                                                  final v = int.tryParse(val);
-                                                  debugPrint(
-                                                      'parsed value = $v');
-                                                  if (v == null) {
-                                                    _numberInputIsValid = false;
-                                                  } else {
-                                                    _numberInputIsValid = true;
-                                                    BlocProvider.of<
-                                                                NotificationService>(
-                                                            context)
-                                                        .add(
-                                                            ChangedRandomMinInterval(
-                                                                intervalMin:
-                                                                    v));
-                                                  }
-                                                },
-                                              ))),
-                                          Text(' - '),
-                                          Container(
-                                              width: 60,
-                                              height: 40,
-                                              child: Flexible(
-                                                  child: TextField(
-                                                controller:
-                                                    TextEditingController()
-                                                      ..text = state
-                                                          .randomIntervalMax
-                                                          .toString(),
-                                                keyboardType:
-                                                    TextInputType.number,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyText1,
-                                                decoration: InputDecoration(
-                                                  border: OutlineInputBorder(
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(
-                                                                10.0)),
-                                                  ),
-                                                ),
-                                                onChanged: (String val) {
-                                                  final v = int.tryParse(val);
-                                                  debugPrint(
-                                                      'parsed value = $v');
-                                                  if (v == null) {
-                                                    _numberInputIsValid = false;
-                                                  } else {
-                                                    _numberInputIsValid = true;
-                                                    BlocProvider.of<
-                                                                NotificationService>(
-                                                            context)
-                                                        .add(
-                                                            ChangedRandomMaxInterval(
-                                                                intervalMax:
-                                                                    v));
-                                                  }
-                                                },
-                                              ))),
-                                          SizedBox(
-                                            width: 30,
-                                          ),
-                                        ]),
-                              Text(Constants.intervalMode[index].toString())
                             ]),
                     ],
                   ),
                 ),
+                Row(mainAxisSize: MainAxisSize.max, children: [
+                  Container(
+                    height: 30,
+                    width: 80,
+                    //color: Colors.purple,
+                    alignment: Alignment.center,
+                    //margin: EdgeInsets.all(1),
+                    //padding: EdgeInsets.all(1),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(5)),
+                      border: Border.all(color: Colors.grey, width: 1),
+                      //borderRadius:
+                    ),
+                    child: Text(
+                      '${Constants.showStringTime(state.currentSliderVolume.round())}',
+                      textAlign: TextAlign.start,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.normal),
+                    ),
+                  ),
+                  Expanded(
+                      child: Slider(
+                    value: state.currentSliderVolume,
+                    min: 0,
+                    max: Constants.timeIntervals.length.toDouble() - 1,
+                    divisions: Constants.timeIntervals.length - 1,
+                    label: Constants.showStringTime(
+                        state.currentSliderVolume.round()),
+                    onChanged: (double value) =>
+                        BlocProvider.of<NotificationTimerSettings>(context)
+                            .add(ChangedSliderVolume(volume: value)),
+                    onChangeEnd: (double value) =>
+                        BlocProvider.of<NotificationTimerSettings>(context).add(
+                            ChangedPreciseInterval(interval: value.toInt())),
+                  )),
+                ]),
               ]));
         });
   }
@@ -282,7 +238,7 @@ class _IntervalTimeRadioButtons extends StatelessWidget {
 class _SoundSourceRadioButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationService, NotificationState>(
+    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
         buildWhen: (previous, current) =>
             previous.soundSource != current.soundSource,
         builder: (context, state) {
@@ -296,13 +252,16 @@ class _SoundSourceRadioButtons extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (int index = 0; index < 3; ++index)
+                      for (int index = 0;
+                          index < Constants.soundMode.length;
+                          ++index)
                         Column(children: [
                           Radio<int>(
                             value: index,
                             groupValue: state.soundSource,
                             onChanged: (value) =>
-                                BlocProvider.of<NotificationService>(context)
+                                BlocProvider.of<NotificationTimerSettings>(
+                                        context)
                                     .add(ToggleSoundSource(value: value)),
                           ),
                           Text(Constants.soundMode[index].toString())
@@ -315,46 +274,10 @@ class _SoundSourceRadioButtons extends StatelessWidget {
   }
 }
 
-class _VibrationLevelRadioButtons extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<NotificationService, NotificationState>(
-        buildWhen: (previous, current) =>
-            previous.vibrationLevel != current.vibrationLevel,
-        builder: (context, state) {
-          return Center(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                Center(child: Text('Vibration')),
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (int index = 0; index < 4; ++index)
-                        Column(children: [
-                          Radio<int>(
-                            value: index,
-                            groupValue: state.vibrationLevel,
-                            onChanged: (value) =>
-                                BlocProvider.of<NotificationService>(context)
-                                    .add(ToggleVibrationLevel(value: value)),
-                          ),
-                          Text(Constants.vibrationMode[index].toString())
-                        ]),
-                    ],
-                  ),
-                ),
-              ]));
-        });
-  }
-}
-
 class _TurnOffCheckboxes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationService, NotificationState>(
+    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
         buildWhen: (previous, current) =>
             previous.isFlightMode != current.isFlightMode ||
             previous.isCallingMode != current.isCallingMode ||
@@ -362,11 +285,15 @@ class _TurnOffCheckboxes extends StatelessWidget {
             previous.isMusicPlaying != current.isMusicPlaying ||
             previous.isTimeOff != current.isTimeOff,
         builder: (context, state) {
+          final DateTime now = DateTime.now();
           return Center(
             child: Column(
               children: [
-                Center(child: Text('Turn off sound when')),
-                CheckboxListTile(
+                Center(
+                    child: const Padding(
+                        padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                        child: Text('Do not show when'))),
+                /*CheckboxListTile(
                   title: Text('Flight mode'),
                   controlAffinity: ListTileControlAffinity.leading,
                   value: state.isFlightMode,
@@ -398,6 +325,7 @@ class _TurnOffCheckboxes extends StatelessWidget {
                       BlocProvider.of<NotificationService>(context)
                           .add(ToggleOffWhenMusicPlaying()),
                 ),
+                */
                 Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -405,13 +333,14 @@ class _TurnOffCheckboxes extends StatelessWidget {
                       Checkbox(
                         value: state.isTimeOff,
                         onChanged: (value) =>
-                            BlocProvider.of<NotificationService>(context)
+                            BlocProvider.of<NotificationTimerSettings>(context)
                                 .add(ToggleOffTimePerDay()),
                       ),
-                      Text('Break time  '),
                       Expanded(
                           child: DateTimeField(
-                        format: DateFormat("hh:mm"),
+                        format: DateFormat("HH:mm"),
+                        initialValue: DateTime(now.year, now.month, now.day,
+                            state.timeFrom.hour, state.timeFrom.minute),
                         decoration: const InputDecoration(
                           hintStyle: TextStyle(color: Colors.black45),
                           errorStyle: TextStyle(color: Colors.redAccent),
@@ -427,14 +356,19 @@ class _TurnOffCheckboxes extends StatelessWidget {
                           );
                           return DateTimeField.convert(time);
                         },
-                        onSaved: (newValue) =>
-                            BlocProvider.of<NotificationService>(context)
-                                .add(ChangedTimeOffFrom(timeFrom: newValue)),
+                        onChanged: (newValue) =>
+                            BlocProvider.of<NotificationTimerSettings>(context)
+                                .add(ChangedTimeOffFrom(
+                                    timeFrom: TimeOfDay(
+                                        hour: newValue.hour,
+                                        minute: newValue.minute))),
                       )),
                       Text('-'),
                       Expanded(
                           child: DateTimeField(
-                        format: DateFormat("hh:mm"),
+                        format: DateFormat("HH:mm"),
+                        initialValue: DateTime(now.year, now.month, now.day,
+                            state.timeUntil.hour, state.timeUntil.minute),
                         decoration: const InputDecoration(
                           hintStyle: TextStyle(color: Colors.black45),
                           errorStyle: TextStyle(color: Colors.redAccent),
@@ -450,51 +384,17 @@ class _TurnOffCheckboxes extends StatelessWidget {
                           );
                           return DateTimeField.convert(time);
                         },
-                        onSaved: (newValue) =>
-                            BlocProvider.of<NotificationService>(context)
-                                .add(ChangedTimeOffUntil(timeUntil: newValue)),
+                        onChanged: (newValue) =>
+                            BlocProvider.of<NotificationTimerSettings>(context)
+                                .add(ChangedTimeOffUntil(
+                                    timeUntil: TimeOfDay(
+                                        hour: newValue.hour,
+                                        minute: newValue.minute))),
                       )),
                     ]),
               ],
             ),
           );
-        });
-  }
-}
-
-class _DaysOffToggleButtons extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<NotificationService, NotificationState>(
-        buildWhen: (previous, current) => previous.dayssh != current.dayssh,
-        builder: (context, state) {
-          return Center(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                Center(child: Text('Days when active')),
-                SizedBox(
-                  height: 20,
-                ),
-                Center(
-                  child: ToggleButtons(
-                    children: [
-                      for (int index = 0; index < 7; ++index)
-                        Column(mainAxisSize: MainAxisSize.min, children: [
-                          Text(Constants.dayName[index]),
-                          state.daysSelected[index]
-                              ? Icon(Icons.bookmark)
-                              : Icon(Icons.bookmark_border_outlined)
-                        ]),
-                    ],
-                    onPressed: (index) =>
-                        BlocProvider.of<NotificationService>(context)
-                            .add(ToggleOffDaysPerWeek(index: index)),
-                    isSelected: state.daysSelected,
-                  ),
-                ),
-              ]));
         });
   }
 }

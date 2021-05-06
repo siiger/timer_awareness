@@ -21,22 +21,29 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
+  
   bloc: ^7.0.0
   flutter_bloc: ^7.0.0
   equatable: ^2.0.0
-  awesome_notifications: ^0.0.5+8
+  awesome_notifications: 0.0.5+8
+  workmanager: ^0.4.0
   fluttertoast: ^4.0.1
   font_awesome_flutter: ^8.8.1
   progressive_image: ^1.0.1
   palette_generator: ^0.2.3
   flutter_statusbarcolor: ^0.2.3
-  shared_preferences: ^0.5.12+2
+  shared_preferences: ^0.5.12+4
   datetime_picker_formfield: ^2.0.0
+  get_it: ^4.0.4
+  easy_debounce: ^2.0.0
+  audioplayers: ^0.17.4
+  flutter_ringtone_player: ^3.0.0
   #firebase_messaging: ^9.1.1
   #firebase_core: ^1.0.3
   url_launcher: ^5.7.5
   http: ^0.12.0
   path_provider: ^1.4.0
+  
   flutter:
     sdk: flutter
 
@@ -59,7 +66,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
+  assets:
+    - assets/rhy_bre_sound3_hold.mp3
+    - assets/rhy_bre_sound1_emp.mp3
+    - assets/rhy_bre_sound2_inh.mp3
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
