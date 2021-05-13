@@ -7,14 +7,14 @@ import 'package:meta/meta.dart';
 import 'package:equatable/equatable.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
-import 'package:timer_awareness/core/date_time_util.dart';
-import 'package:timer_awareness/notification_service.dart';
-import 'package:timer_awareness/core/constants.dart';
+import 'package:norbu_timer/core/date_time_util.dart';
+import 'package:norbu_timer/notification_service.dart';
+import 'package:norbu_timer/core/constants.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:timer_awareness/service_locator.dart';
-import 'package:timer_awareness/core/sharedpref_util.dart';
+import 'package:norbu_timer/service_locator.dart';
+import 'package:norbu_timer/core/sharedpref_util.dart';
 
 part 'timer_settings_event.dart';
 part 'timer_settings_state.dart';
@@ -82,18 +82,8 @@ class NotificationTimerSettings
 
   Stream<TimerSettingsState> _mapInitSettingsToState(
       TimerSettingsState state, InitSettings event) async* {
-    //audioPlayer = AudioPlayer();
-    if (state.isActive) {
-      List<DateTime> dateList = DateTimeUtil.calculateTimeList(
-          intervalSource: state.intervalSource,
-          intervalValue: state.preciseInterval,
-          isTimeOnActivated: state.isTimeOff,
-          timeFrom: state.timeFrom,
-          timeUntil: state.timeUntil);
-
-      await _notificationService.showNotificationByListSchedule(
-          dateList: dateList, importance: NotificationImportance.High);
-    }
+    await _notificationService.setupChannelAwarness(
+        soundSource: state.soundSource);
   }
 
   Future<ByteData> _loadAsset(String soundPath) async {
@@ -119,23 +109,20 @@ class NotificationTimerSettings
   Stream<TimerSettingsState> _mapToggleNotificationServiceToState(
       TimerSettingsState state) async* {
     if (!state.isActive) {
-      //date = '0 0/${state.preciseInterval} * * * ? *';
-      List<DateTime> dateList = DateTimeUtil.calculateTimeList(
+      _notificationService.setupNotificationMessages(messages: state.messages);
+      yield state.copyWith(isActive: true);
+      await sl<SharedPrefUtil>().setActive(true);
+
+      await _notificationService.setupNotificationsTaskForChannelAwareness(
           intervalSource: state.intervalSource,
           intervalValue: state.preciseInterval,
           isTimeOnActivated: state.isTimeOff,
           timeFrom: state.timeFrom,
-          timeUntil: state.timeUntil);
-      _notificationService.setupNotificationMessages(messages: state.messages);
-      //_notificationService.setMessagesList(state.messages);
-      yield state.copyWith(isActive: true);
-      await sl<SharedPrefUtil>().setActive(true);
-
-      await _notificationService.showNotificationByListSchedule(
-          dateList: dateList, importance: NotificationImportance.High);
+          timeUntil: state.timeUntil,
+          messagesList: state.messages,
+          importance: NotificationImportance.High);
     } else {
-      await _notificationService.cancelAllSchedulesForTimerAwareness();
-
+      await _notificationService.cancelNotificationsTaskForChannelAwareness();
       yield state.copyWith(isActive: false);
       await sl<SharedPrefUtil>().setActive(false);
     }
@@ -144,17 +131,14 @@ class NotificationTimerSettings
   Stream<TimerSettingsState> _mapChangedPreciseIntervalToState(
       TimerSettingsState state, ChangedPreciseInterval event) async* {
     if (state.isActive) {
-      //await _notificationService.cancelAllSchedulesForTimerAwareness();
-
-      List<DateTime> dateList = DateTimeUtil.calculateTimeList(
+      await _notificationService.setupNotificationsTaskForChannelAwareness(
           intervalSource: state.intervalSource,
           intervalValue: Constants.timeIntervals[event.interval],
           isTimeOnActivated: state.isTimeOff,
           timeFrom: state.timeFrom,
-          timeUntil: state.timeUntil);
-
-      await _notificationService.showNotificationByListSchedule(
-          dateList: dateList, importance: NotificationImportance.High);
+          timeUntil: state.timeUntil,
+          messagesList: state.messages,
+          importance: NotificationImportance.High);
     }
     yield state.copyWith(
         preciseInterval: Constants.timeIntervals[event.interval]);
@@ -173,24 +157,32 @@ class NotificationTimerSettings
     List<String> mes = state.messages
       ..replaceRange(event.index, event.index + 1, [event.message]);
 
-    _notificationService.setupNotificationMessages(messages: mes);
     yield state.copyWith(messages: mes);
     await sl<SharedPrefUtil>().setMessages(mes);
+
+    if (state.isActive) {
+      await _notificationService.setupNotificationsTaskForChannelAwareness(
+          intervalSource: state.intervalSource,
+          intervalValue: state.preciseInterval,
+          isTimeOnActivated: state.isTimeOff,
+          timeFrom: state.timeFrom,
+          timeUntil: state.timeUntil,
+          messagesList: mes,
+          importance: NotificationImportance.High);
+    }
   }
 
   Stream<TimerSettingsState> _mapChangedTimeOffFromToState(
       TimerSettingsState state, ChangedTimeOffFrom event) async* {
     if (state.isActive) {
-      //await _notificationService.cancelAllSchedulesForTimerAwareness();
-
-      List<DateTime> dateList = DateTimeUtil.calculateTimeList(
+      await _notificationService.setupNotificationsTaskForChannelAwareness(
           intervalSource: state.intervalSource,
           intervalValue: state.preciseInterval,
           isTimeOnActivated: state.isTimeOff,
           timeFrom: event.timeFrom,
-          timeUntil: state.timeUntil);
-      await _notificationService.showNotificationByListSchedule(
-          dateList: dateList, importance: NotificationImportance.High);
+          timeUntil: state.timeUntil,
+          messagesList: state.messages,
+          importance: NotificationImportance.High);
     }
 
     await sl<SharedPrefUtil>().setTimeOffFrom(event.timeFrom);
@@ -201,16 +193,14 @@ class NotificationTimerSettings
   Stream<TimerSettingsState> _mapChangedTimeOffUntilToState(
       TimerSettingsState state, ChangedTimeOffUntil event) async* {
     if (state.isActive) {
-      //await _notificationService.cancelAllSchedulesForTimerAwareness();
-
-      List<DateTime> dateList = DateTimeUtil.calculateTimeList(
+      await _notificationService.setupNotificationsTaskForChannelAwareness(
           intervalSource: state.intervalSource,
           intervalValue: state.preciseInterval,
           isTimeOnActivated: state.isTimeOff,
           timeFrom: state.timeFrom,
-          timeUntil: event.timeUntil);
-      await _notificationService.showNotificationByListSchedule(
-          dateList: dateList, importance: NotificationImportance.High);
+          timeUntil: event.timeUntil,
+          messagesList: state.messages,
+          importance: NotificationImportance.High);
     }
 
     await sl<SharedPrefUtil>().setTimeOffUntil(event.timeUntil);
@@ -223,25 +213,20 @@ class NotificationTimerSettings
     await _playLocal(event.value);
     yield state.copyWith(soundSource: event.value);
     await sl<SharedPrefUtil>().setSoundSource(event.value);
-    if (state.isActive) {
-      //await _notificationService.cancelAllSchedulesForTimerAwareness();
-      await _notificationService.updateSoundSourceForChannelAwarness(
-          soundSource: event.value);
-    }
+    await _notificationService.setupChannelAwarness(soundSource: event.value);
   }
 
   Stream<TimerSettingsState> _mapToggleIntervalSourceToState(
       TimerSettingsState state, ToggleIntervalSource event) async* {
     if (state.isActive) {
-      //await _notificationService.cancelAllSchedulesForTimerAwareness();
-      List<DateTime> dateList = DateTimeUtil.calculateTimeList(
+      await _notificationService.setupNotificationsTaskForChannelAwareness(
           intervalSource: event.value,
           intervalValue: state.preciseInterval,
           isTimeOnActivated: state.isTimeOff,
           timeFrom: state.timeFrom,
-          timeUntil: state.timeUntil);
-      await _notificationService.showNotificationByListSchedule(
-          dateList: dateList, importance: NotificationImportance.High);
+          timeUntil: state.timeUntil,
+          messagesList: state.messages,
+          importance: NotificationImportance.High);
     }
     yield state.copyWith(intervalSource: event.value);
     await sl<SharedPrefUtil>().setIntervalSource(event.value);
@@ -251,31 +236,27 @@ class NotificationTimerSettings
       TimerSettingsState state, ToggleOffTimePerDay event) async* {
     if (!state.isTimeOff) {
       if (state.isActive) {
-        await _notificationService.cancelAllSchedulesForTimerAwareness();
-
-        List<DateTime> dateList = DateTimeUtil.calculateTimeList(
+        await _notificationService.setupNotificationsTaskForChannelAwareness(
             intervalSource: state.intervalSource,
             intervalValue: state.preciseInterval,
             isTimeOnActivated: true,
             timeFrom: state.timeFrom,
-            timeUntil: state.timeUntil);
-
-        await _notificationService.showNotificationByListSchedule(
-            dateList: dateList, importance: NotificationImportance.High);
+            timeUntil: state.timeUntil,
+            messagesList: state.messages,
+            importance: NotificationImportance.High);
       }
       yield state.copyWith(isTimeOff: true);
       await sl<SharedPrefUtil>().setTimeOffPerDay(true);
     } else {
       if (state.isActive) {
-        List<DateTime> dateList = DateTimeUtil.calculateTimeList(
+        await _notificationService.setupNotificationsTaskForChannelAwareness(
             intervalSource: state.intervalSource,
             intervalValue: state.preciseInterval,
             isTimeOnActivated: false,
             timeFrom: state.timeFrom,
-            timeUntil: state.timeUntil);
-
-        await _notificationService.showNotificationByListSchedule(
-            dateList: dateList, importance: NotificationImportance.High);
+            timeUntil: state.timeUntil,
+            messagesList: state.messages,
+            importance: NotificationImportance.High);
       }
       yield state.copyWith(isTimeOff: false);
       await sl<SharedPrefUtil>().setTimeOffPerDay(false);

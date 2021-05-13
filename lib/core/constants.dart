@@ -5,6 +5,12 @@ class Constants {
     'Tibetian Bowl     ',
     'System    '
   ];
+
+  static List<String> listMessages = [
+    'Поблагодари себя.',
+    'Да, я в моменте!',
+    'Ура, я есть!'
+  ];
   static const List<String> intervalMode = ['Precise  ', 'Random'];
   static const List<String> vibrationMode = [
     'Without   ',
@@ -21,37 +27,6 @@ class Constants {
     'FRI',
     'SAT',
     'SUN'
-  ];
-
-  static const List<int> timeIntervals = [
-    1,
-    5,
-    10,
-    15,
-    20,
-    25,
-    30,
-    35,
-    40,
-    45,
-    50,
-    55,
-    60,
-    90,
-    120,
-    150,
-    180,
-    240,
-    360,
-    480,
-    600,
-    720,
-    840,
-    960,
-    1080,
-    1200,
-    1320,
-    1440,
   ];
 
   static String showStringTime(int i) {
@@ -80,8 +55,38 @@ class Constants {
   static const String timeUntilKeyMinute = 'timeUntilMinute';
 
   static const List<String> soundSourceArray = [
-    'resource://raw/rhy_bre_sound3_hold',
-    'resource://raw/rhy_bre_sound1_emp',
-    'resource://raw/rhy_bre_sound2_inh'
+    'resource://raw/res_rhy_bre_sound3_hold',
+    'resource://raw/res_rhy_bre_sound1_emp',
+    'resource://raw/res_rhy_bre_sound2_inh'
+  ];
+
+  static const List<int> timeIntervals = [
+    5,
+    10,
+    15,
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    50,
+    55,
+    60,
+    90,
+    120,
+    150,
+    180,
+    240,
+    360,
+    480,
+    600,
+    720,
+    840,
+    960,
+    1080,
+    1200,
+    1320,
+    1440,
   ];
 }

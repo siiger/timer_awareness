@@ -1,63 +1,95 @@
-import 'package:timer_awareness/core/math_util.dart';
+import 'package:norbu_timer/core/math_util.dart';
 import 'package:flutter/material.dart';
 
 class DateTimeUtil {
   DateTimeUtil._();
 
-  static List<DateTime> calculateTimeList({
-    int intervalSource,
+  static DateTime nextTimeWithConditions(
+      {DateTime currentTime,
+      int intervalValue,
+      TimeOfDay timeFrom,
+      TimeOfDay timeUntil}) {
+    DateTime result;
+    result = currentTime.add(Duration(minutes: intervalValue));
+    if (timeFrom.hour > timeUntil.hour) {
+      if (result.isAfter(DateTime(result.year, result.month, result.day,
+              timeUntil.hour, timeUntil.minute)) &&
+          result.isBefore(DateTime(result.year, result.month, result.day,
+              timeFrom.hour, timeFrom.minute))) {
+      } else if (result.isBefore(DateTime(result.year, result.month, result.day,
+          timeUntil.hour, timeUntil.minute))) {
+        result = DateTime(result.year, result.month, result.day, timeUntil.hour,
+            timeUntil.minute);
+      } else if (result.isAfter(DateTime(result.year, result.month, result.day,
+          timeFrom.hour, timeFrom.minute))) {
+        result = DateTime(result.year, result.month, result.day + 1,
+            timeUntil.hour, timeUntil.minute);
+      }
+    } else if (timeFrom.hour < timeUntil.hour) {
+      if (result.isAfter(DateTime(result.year, result.month, result.day,
+              timeUntil.hour, timeUntil.minute)) ||
+          result.isBefore(DateTime(result.year, result.month, result.day,
+              timeFrom.hour, timeFrom.minute))) {
+      } else if (result.isAfter(DateTime(result.year, result.month, result.day,
+              timeFrom.hour, timeFrom.minute)) &&
+          result.isBefore(DateTime(result.year, result.month, result.day,
+              timeUntil.hour, timeUntil.minute))) {
+        result = DateTime(result.year, result.month, result.day, timeUntil.hour,
+            timeUntil.minute);
+      }
+    }
+    return result;
+  }
+
+  static DateTime nextTime({
+    DateTime currentTime,
     int intervalValue,
     TimeOfDay timeFrom,
     TimeOfDay timeUntil,
+    int intervalSource,
     bool isTimeOnActivated,
   }) {
-    int lengthList = 300;
-    List<int> listIntervals;
-    List<DateTime> listDate = [];
+    DateTime result;
+    int intervalRes;
 
     if (intervalSource == 0) {
-      listIntervals = new List<int>.generate(lengthList, (i) => intervalValue);
+      intervalRes = intervalValue;
     } else if (intervalSource == 1) {
       int randomMin = intervalValue - (intervalValue / 2).round();
-      int randomMax = intervalValue + (intervalValue / 2).round();
-      listIntervals = new List<int>.generate(
-          lengthList, (i) => MathUtil.random(randomMin, randomMax));
+      //int randomMax = intervalValue + (intervalValue / 2).round();
+      intervalRes = MathUtil.random(randomMin, intervalValue + 1);
     }
 
-    // дата первого уведомления
-    final DateTime now = DateTime.now();
-    DateTime notificationDateTimeFrom =
-        DateTime(now.year, now.month, now.day, timeFrom.hour, timeFrom.minute);
-    DateTime notificationDateTimeUntil = DateTime(
-        now.year, now.month, now.day, timeUntil.hour, timeUntil.minute);
-    if (notificationDateTimeUntil.isBefore(notificationDateTimeFrom)) {
-      notificationDateTimeUntil =
-          notificationDateTimeUntil.add(const Duration(days: 1));
+    if (isTimeOnActivated) {
+      result = nextTimeWithConditions(
+          currentTime: currentTime,
+          intervalValue: intervalRes,
+          timeFrom: timeFrom,
+          timeUntil: timeUntil);
+    } else {
+      result = currentTime.add(Duration(minutes: intervalRes));
     }
 
-    DateTime notificationDateTime = now;
+    return result;
+  }
 
-    for (int i = 0; i < lengthList; i++) {
-      notificationDateTime =
-          notificationDateTime.add(Duration(minutes: listIntervals[i]));
-      if (isTimeOnActivated) {
-        if (notificationDateTime.isAfter(notificationDateTimeFrom) &&
-            notificationDateTime.isBefore(notificationDateTimeUntil)) {
-          notificationDateTimeFrom =
-              notificationDateTimeFrom.add(const Duration(days: 1));
-          notificationDateTime = notificationDateTimeUntil;
-          listDate.add(notificationDateTime.toUtc());
-          notificationDateTimeUntil =
-              notificationDateTimeUntil.add(const Duration(days: 1));
-        } else if (!(notificationDateTime.isAfter(notificationDateTimeFrom) &&
-            notificationDateTime.isBefore(notificationDateTimeUntil))) {
-          listDate.add(notificationDateTime.toUtc());
-        }
-      } else {
-        listDate.add(notificationDateTime.toUtc());
-      }
-    }
+  static int intervalDelayInSeconds({
+    int intervalValue,
+    List<int> timeFrom,
+    List<int> timeUntil,
+    int intervalSource,
+    bool isTimeOnActivated,
+  }) {
+    DateTime currentTime = DateTime.now();
 
-    return listDate;
+    DateTime nexTime = nextTime(
+        currentTime: currentTime,
+        intervalValue: intervalValue,
+        timeFrom: TimeOfDay(hour: timeFrom[0], minute: timeFrom[1]),
+        timeUntil: TimeOfDay(hour: timeUntil[0], minute: timeUntil[1]),
+        intervalSource: intervalSource,
+        isTimeOnActivated: isTimeOnActivated);
+
+    return nexTime.difference(currentTime).inSeconds;
   }
 }

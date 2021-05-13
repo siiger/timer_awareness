@@ -1,4 +1,4 @@
-name: timer_awareness
+name: norbu_timer
 description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
@@ -25,9 +25,8 @@ dependencies:
   bloc: ^7.0.0
   flutter_bloc: ^7.0.0
   equatable: ^2.0.0
-  awesome_notifications: 0.0.5+8
+  awesome_notifications: ^0.0.5+8
   workmanager: ^0.4.0
-  fluttertoast: ^4.0.1
   font_awesome_flutter: ^8.8.1
   progressive_image: ^1.0.1
   palette_generator: ^0.2.3
@@ -67,9 +66,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/rhy_bre_sound3_hold.mp3
-    - assets/rhy_bre_sound1_emp.mp3
-    - assets/rhy_bre_sound2_inh.mp3
+    - assets/res_rhy_bre_sound3_hold.mp3
+    - assets/res_rhy_bre_sound1_emp.mp3
+    - assets/res_rhy_bre_sound2_inh.mp3
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

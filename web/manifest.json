@@ -1,6 +1,6 @@
 {
-    "name": "timer_awareness",
-    "short_name": "timer_awareness",
+    "name": "norbu_timer",
+    "short_name": "norbu_timer",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

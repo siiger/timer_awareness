@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:timer_awareness/bloc_timer_settings/timer_settings_bloc.dart';
-import 'package:timer_awareness/core/constants.dart';
+import 'package:norbu_timer/bloc_timer_settings/timer_settings_bloc.dart';
+import 'package:norbu_timer/core/constants.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:intl/intl.dart';
-import 'package:timer_awareness/widgets/custom_container.dart';
+import 'package:norbu_timer/widgets/custom_container.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 
 class TimerPage extends StatelessWidget {
@@ -12,7 +12,7 @@ class TimerPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('Timer awareness'),
+          title: Text('Norbu-Timer'),
           actions: [],
         ),
         body: SingleChildScrollView(
@@ -92,7 +92,7 @@ class _AcceptSwitchButton extends StatelessWidget {
                   children: [
                 const Padding(
                     padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: Text('Вкл / Выкл')),
+                    child: Text('Off / On')),
                 Center(
                   child: Switch(
                     value: state.isActive,
@@ -363,7 +363,7 @@ class _TurnOffCheckboxes extends StatelessWidget {
                                         hour: newValue.hour,
                                         minute: newValue.minute))),
                       )),
-                      Text('-'),
+                      Text('  -  '),
                       Expanded(
                           child: DateTimeField(
                         format: DateFormat("HH:mm"),

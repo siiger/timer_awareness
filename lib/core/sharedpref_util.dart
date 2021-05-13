@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timer_awareness/core/constants.dart';
+import 'package:norbu_timer/core/constants.dart';
 import 'package:meta/meta.dart';
 import 'package:flutter/material.dart';
 
@@ -18,17 +18,12 @@ class SharedPrefUtil {
     isTimeOffPre = _preferences.getBool(Constants.isTimeOffKey);
     timeFrom = getTimeOffFrom();
     timeUntil = getTimeOffUntil();
-    if (listMessagesPre == null)
-      listMessagesPre = [
-        'Поблагодари себя.',
-        'Да, я в моменте!',
-        'Ура, я есть!'
-      ];
+    if (listMessagesPre == null) listMessagesPre = Constants.listMessages;
     if (intervalSourcePre == null) intervalSourcePre = 0;
     if (soundSourcePre == null) soundSourcePre = 0;
     if (isActivePre == null) isActivePre = false;
     if (isTimeOffPre == null) isTimeOffPre = true;
-    if (sliderValuePre == null) sliderValuePre = 7.0;
+    if (sliderValuePre == null) sliderValuePre = 8.0;
     if (intervalPre == null)
       intervalPre = Constants.timeIntervals[sliderValuePre.toInt()];
   }

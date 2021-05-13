@@ -7,11 +7,24 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:norbu_timer/core/date_time_util.dart';
+import 'package:norbu_timer/core/math_util.dart';
 
-import 'package:timer_awareness/main.dart';
+import 'package:norbu_timer/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  DateTime time = DateTimeUtil.nextTime(
+      currentTime: DateTime.now(),
+      intervalValue: 10,
+      timeFrom: TimeOfDay(hour: 23, minute: 0),
+      timeUntil: TimeOfDay(hour: 22, minute: 0));
+  print(time);
+  int intervalValue = 5;
+  int randomMin = intervalValue - (intervalValue / 2).round();
+  List<int> listIntervals = new List<int>.generate(
+      10, (i) => MathUtil.random(randomMin, intervalValue));
+  print(listIntervals);
+  /*testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(App());
 
@@ -27,4 +40,5 @@ void main() {
     expect(find.text('0'), findsNothing);
     expect(find.text('1'), findsOneWidget);
   });
+  */
 }

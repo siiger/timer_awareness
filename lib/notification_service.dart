@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'dart:math';
-import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:timer_awareness/routes.dart';
-import 'package:timer_awareness/core/constants.dart';
+import 'package:norbu_timer/routes.dart';
+import 'package:norbu_timer/core/constants.dart';
+import 'package:workmanager/workmanager.dart';
+import 'package:norbu_timer/core/date_time_util.dart';
+import 'package:norbu_timer/model/data_timer.dart';
+import 'package:norbu_timer/service_locator.dart';
 
 class NotificationService {
   final AwesomeNotifications _awesomeLocalNotifications;
@@ -20,37 +22,18 @@ class NotificationService {
 
   StreamSubscription<ReceivedAction> _actionStream;
 
-  final String channelAwareness = 'awareness';
-  final String channelDaily = 'daily';
-
   List<String> _notificationMessages = [];
-
-  Isolate _isolate;
-  ReceivePort _receivePort;
-
-  var rn = new Random();
-
-  static const String _notificationsChannelId = 'app.norbu.notification';
-  static const String _notificationsChannelName = 'Norbu notifications';
-  static const String _notificationsChannelDescr = 'Daily notifications';
-  static const String _notificationsIconSmall = 'norbu_notific';
-  static const String _notificationsIconLarge = 'norbu_notific_large';
-
-  void dispose() {
-    _actionStream.cancel();
-  }
+  String _soundSourcePath = Constants.soundSourceArray[0];
 
   Future init() async {
     await _awesomeLocalNotifications
-        .initialize('resource://drawable/res_app_icon', []);
+        .initialize('resource://drawable/norbu_notific_large', []);
 
     await _awesomeLocalNotifications.isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
         _awesomeLocalNotifications.requestPermissionToSendNotifications();
       }
     });
-
-    await setupChannelAwarness();
 
     _actionStream =
         _awesomeLocalNotifications.actionStream.listen((receivedNotification) {
@@ -63,6 +46,11 @@ class NotificationService {
     });
   }
 
+  void dispose() {
+    _actionStream.cancel();
+  }
+
+  //if tap notifications
   void processDefaultActionReceived(ReceivedAction receivedNotification) {
     //Fluttertoast.showToast(msg: 'Action received');
     String targetPage;
@@ -73,6 +61,7 @@ class NotificationService {
         arguments: receivedNotification);
   }
 
+  //if press button
   void processSettingsControls(ReceivedAction receivedNotification) {
     String targetPage;
     targetPage = PAGE_SETTINGS;
@@ -81,94 +70,71 @@ class NotificationService {
         (route) => (route.settings.name != targetPage) || route.isFirst);
   }
 
-  Future<void> updateSoundSourceForChannelAwarness({
+  Future<void> setupChannelAwarness({
     int soundSource,
   }) async {
-    String soundSourcePath = Constants.soundSourceArray[soundSource];
+    if (soundSource < 3) {
+      _soundSourcePath = Constants.soundSourceArray[soundSource];
 
-    await _awesomeLocalNotifications.setChannel(NotificationChannel(
-      channelKey: channelAwareness,
-      channelName: 'Awareness',
-      channelDescription: 'Timer settinings',
-      channelShowBadge: false,
-      playSound: true,
-      soundSource: soundSourcePath,
-      enableVibration: false,
-      importance: NotificationImportance.High,
-    ));
-  }
-
-  Future<void> setupChannelAwarness() async {
-    await _awesomeLocalNotifications.setChannel(NotificationChannel(
-      channelKey: channelAwareness,
-      channelName: 'Awareness',
-      channelDescription: 'Timer settinings',
-      channelShowBadge: false,
-      playSound: true,
-      soundSource: Constants.soundSourceArray[0],
-      enableVibration: false,
-      importance: NotificationImportance.High,
-    ));
-  }
-
-  Future<void> showNotificationByListSchedule({
-    List<DateTime> dateList,
-    NotificationImportance importance,
-  }) async {
-    await cancelAllSchedulesForTimerAwareness();
-
-    _receivePort = ReceivePort();
-    //Isolate stream for handle notification when application is working,
-    //if the app is terminated then will be executed schedule for '_awesomeLocalNotifications'
-    _isolate =
-        await Isolate.spawn(_checkTimer, [_receivePort.sendPort, dateList]);
-    _receivePort.listen(_handleMessage, onDone: () {
-      print("done!");
-    });
-
-    //_log.fine('Schedule notification at $notificationDateTime');
-  }
-
-  static void _checkTimer(List<Object> arguments) async {
-    SendPort sendPort = arguments[0];
-    List<DateTime> dateList = arguments[1];
-    dateList.insert(0, DateTime.now().toUtc());
-    List<DateTime> dateListSh = dateList;
-
-    for (var i = 0; i <= dateList.length; i++) {
-      await Future.delayed(
-          Duration(
-              milliseconds:
-                  dateList[i + 1].difference(dateList[i]).inMilliseconds -
-                      2000), () {
-        dateListSh = dateListSh.sublist(1);
-        print('SEND: ');
-        sendPort.send(dateListSh);
-      });
+      await _awesomeLocalNotifications.setChannel(NotificationChannel(
+        channelKey: channelAwareness,
+        channelName: 'Norbu_Timer',
+        channelDescription: 'Timer settinings',
+        channelShowBadge: false,
+        playSound: true,
+        soundSource: _soundSourcePath,
+        enableVibration: false,
+        importance: NotificationImportance.High,
+      ));
+    } else if (soundSource == 3) {
+      await _awesomeLocalNotifications.setChannel(NotificationChannel(
+          channelKey: channelAwareness,
+          channelName: 'Norbu_Timer',
+          channelDescription: 'Timer settinings',
+          channelShowBadge: false,
+          enableVibration: false,
+          defaultRingtoneType: DefaultRingtoneType.Notification,
+          importance: NotificationImportance.High));
     }
   }
 
-  void _handleMessage(dynamic data) async {
-    var index = rn.nextInt(_notificationMessages.length);
+  Future<void> setupNotificationsTaskForChannelAwareness({
+    int intervalSource,
+    int intervalValue,
+    TimeOfDay timeFrom,
+    TimeOfDay timeUntil,
+    bool isTimeOnActivated,
+    List<String> messagesList,
+    NotificationImportance importance,
+  }) async {
+    await cancelNotificationsTaskForChannelAwareness();
+    List<int> listTimeFrom = [timeFrom.hour, timeFrom.minute];
+    List<int> listTimeUntil = [timeUntil.hour, timeUntil.minute];
 
-    await _awesomeLocalNotifications.createNotification(
-        content: NotificationContent(
-            id: 1,
-            channelKey: channelAwareness,
-            displayOnBackground: true,
-            title: '${_notificationMessages[index]}',
-            body: 'Таймер осознанности',
-            payload: {'uuid': 'user-profile-uuid1'}),
-        actionButtons: [
-          NotificationActionButton(
-            key: 'Settings_Timer',
-            label: 'Настройки таймера осознанности',
-            autoCancel: true,
-            buttonType: ActionButtonType.Default,
-          )
-        ],
-        schedule: NotificationSchedule(preciseSchedules: data));
-    print('RECEIVED: ');
+    DataTimer dataTimerTask = DataTimer(
+        intervalSource: intervalSource,
+        intervalValue: intervalValue,
+        timeFrom: listTimeFrom,
+        timeUntil: listTimeUntil,
+        soundSourcePath: _soundSourcePath,
+        messages: messagesList,
+        isTimeOnActivated: isTimeOnActivated);
+
+    int intervalDelay = DateTimeUtil.intervalDelayInSeconds(
+        intervalValue: intervalValue,
+        timeFrom: listTimeFrom,
+        timeUntil: listTimeUntil,
+        intervalSource: intervalSource,
+        isTimeOnActivated: isTimeOnActivated);
+
+    Workmanager().registerOneOffTask(
+      tagAwaTask,
+      channelAwarenessDelayedTask,
+      inputData: dataTimerTask.toMap(),
+      initialDelay: Duration(seconds: intervalDelay),
+    );
+
+    //_log.fine('Schedule notification at $notificationDateTime');
   }
 
   void setupNotificationMessages({List<String> messages}) {
@@ -192,14 +158,9 @@ class NotificationService {
     await _awesomeLocalNotifications.cancel(id);
   }
 
-  Future<void> cancelAllSchedulesForTimerAwareness() async {
-    await cancelSchedule(1);
-    await cancelNotification(1).then((value) {
-      if (_isolate != null) {
-        _receivePort.close();
-        _isolate.kill(priority: Isolate.immediate);
-        _isolate = null;
-      }
-    });
+  Future<void> cancelNotificationsTaskForChannelAwareness() async {
+    //await cancelSchedule(1);
+    await cancelNotification(idAwa);
+    await Workmanager().cancelAll();
   }
 }

@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:timer_awareness/bloc_timer_settings/timer_settings_bloc.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:timer_awareness/timer_page.dart';
-import 'package:timer_awareness/routes.dart';
-import 'package:timer_awareness/service_locator.dart';
-import 'package:timer_awareness/notification_service.dart';
-import 'package:timer_awareness/widgets/notifications_home_page.dart';
+import 'package:norbu_timer/bloc_timer_settings/timer_settings_bloc.dart';
+import 'package:norbu_timer/timer_page.dart';
+import 'package:norbu_timer/routes.dart';
+import 'package:norbu_timer/service_locator.dart';
+import 'package:norbu_timer/notification_service.dart';
+import 'package:norbu_timer/widgets/notifications_home_page.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupLocator();
-
   runApp(App());
 }
 

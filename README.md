@@ -1,4 +1,4 @@
-# timer_awareness
+# norbu_timer
 
 A new Flutter project.
 
