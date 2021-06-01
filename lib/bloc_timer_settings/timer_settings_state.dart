@@ -14,6 +14,7 @@ class TimerSettingsState extends Equatable {
   final int soundSource;
   final double currentSliderVolume;
   final List<String> messages;
+  final List<String> checkMessages;
 
   const TimerSettingsState({
     this.isActive = false,
@@ -29,6 +30,7 @@ class TimerSettingsState extends Equatable {
     this.soundSource = 0,
     this.currentSliderVolume = 0.5,
     this.messages,
+    this.checkMessages,
   });
 
   @override
@@ -47,6 +49,7 @@ class TimerSettingsState extends Equatable {
       soundSource,
       currentSliderVolume,
       messages,
+      checkMessages,
     ];
   }
 
@@ -64,6 +67,7 @@ class TimerSettingsState extends Equatable {
     int soundSource,
     double currentSliderVolume,
     List<String> messages,
+    List<String> checkMessages,
   }) {
     return TimerSettingsState(
       isActive: isActive ?? this.isActive,
@@ -79,6 +83,7 @@ class TimerSettingsState extends Equatable {
       soundSource: soundSource ?? this.soundSource,
       currentSliderVolume: currentSliderVolume ?? this.currentSliderVolume,
       messages: messages ?? this.messages,
+      checkMessages: checkMessages ?? this.checkMessages,
     );
   }
 

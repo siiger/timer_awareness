@@ -77,3 +77,11 @@ class ChangedMessages extends TimerSettingsEvent {
   @override
   List<Object> get props => [message, index];
 }
+
+class CheckMessage extends TimerSettingsEvent {
+  final int index;
+
+  CheckMessage({this.index});
+  @override
+  List<Object> get props => [index];
+}

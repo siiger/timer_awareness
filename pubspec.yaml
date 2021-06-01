@@ -26,7 +26,7 @@ dependencies:
   flutter_bloc: ^7.0.0
   equatable: ^2.0.0
   awesome_notifications: ^0.0.5+8
-  workmanager: ^0.4.0
+  background_fetch: ^0.7.2
   font_awesome_flutter: ^8.8.1
   progressive_image: ^1.0.1
   palette_generator: ^0.2.3

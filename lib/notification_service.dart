@@ -1,13 +1,196 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:norbu_timer/routes.dart';
 import 'package:norbu_timer/core/constants.dart';
-import 'package:workmanager/workmanager.dart';
+import 'package:background_fetch/background_fetch.dart';
 import 'package:norbu_timer/core/date_time_util.dart';
-import 'package:norbu_timer/model/data_timer.dart';
 import 'package:norbu_timer/service_locator.dart';
+import 'package:norbu_timer/core/sharedpref_util.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// This "Headless Task" is run when app is terminated.
+void backgroundFetchHeadlessTask(HeadlessTask task) async {
+  var taskId = task.taskId;
+  var timeout = task.timeout;
+  if (timeout) {
+    print("[BackgroundFetch] Headless task timed-out: $taskId");
+    BackgroundFetch.finish(taskId);
+    return;
+  }
+
+  var prefs = await SharedPreferences.getInstance();
+  final SharedPrefUtil dataTimerTask = SharedPrefUtil(preferences: prefs);
+
+  DateTime currentTime = DateTime.now();
+
+  DateTime nexTime = DateTimeUtil.nextTime(
+      currentTime: currentTime,
+      intervalValue: dataTimerTask.intervalPre,
+      timeFrom: dataTimerTask.timeFrom,
+      timeUntil: dataTimerTask.timeUntil,
+      intervalSource: dataTimerTask.intervalSourcePre,
+      isTimeOnActivated: dataTimerTask.isTimeOffPre);
+
+  int intervalDelay = nexTime.difference(currentTime).inMinutes;
+
+  if (intervalDelay > dataTimerTask.intervalPre) {
+    BackgroundFetch.finish(taskId);
+    return;
+  } else if (intervalDelay <= dataTimerTask.intervalPre) {
+    List<String> messageListResault = [];
+    for (int i = 0; i < dataTimerTask.listMessagesPre.length; i++) {
+      if (dataTimerTask.listCheckMessagesPre.contains(i.toString()))
+        messageListResault..add(dataTimerTask.listMessagesPre[i]);
+    }
+
+    String messageResault = ' ';
+    for (int i = 0; i < Constants.lengthTaskList; i++) {
+      if (messageListResault.isNotEmpty) {
+        if (messageListResault.length > 1) {
+          var index = Random().nextInt(messageListResault.length);
+          messageResault = messageListResault[index];
+        } else if (messageListResault.length == 1) {
+          messageResault = messageListResault[0];
+        }
+      }
+    }
+    if (dataTimerTask.soundSourcePre < 3) {
+      String _soundSourcePath =
+          Constants.soundSourceArray[dataTimerTask.soundSourcePre];
+
+      await awesomeNotifications.setChannel(NotificationChannel(
+        channelKey: channelAwareness,
+        channelName: 'Norbu_Timer',
+        channelDescription: 'Timer settinings',
+        channelShowBadge: false,
+        playSound: true,
+        soundSource: _soundSourcePath,
+        enableVibration: false,
+        importance: NotificationImportance.High,
+      ));
+    } else if (dataTimerTask.soundSourcePre == 3) {
+      await awesomeNotifications.setChannel(NotificationChannel(
+          channelKey: channelAwareness,
+          channelName: 'Norbu_Timer',
+          channelDescription: 'Timer settinings',
+          channelShowBadge: false,
+          enableVibration: false,
+          defaultRingtoneType: DefaultRingtoneType.Notification,
+          importance: NotificationImportance.High));
+    }
+
+    await awesomeNotifications.createNotification(
+        content: NotificationContent(
+            id: 0,
+            channelKey: channelAwareness,
+            title: messageResault,
+            body: 'Таймер осознанности',
+            payload: {'uuid': 'user-profile-uuid1'}),
+        actionButtons: [
+          NotificationActionButton(
+            key: 'Settings_Timer',
+            label: 'Настройки таймера осознанности',
+            autoCancel: true,
+            buttonType: ActionButtonType.Default,
+          )
+        ],
+        schedule: NotificationCalendar.fromDate(date: nexTime.toUtc()));
+
+    BackgroundFetch.finish(taskId);
+  }
+}
+
+void _onBackgroundFetch(String taskId) async {
+  var prefs = await SharedPreferences.getInstance();
+  final SharedPrefUtil dataTimerTask = SharedPrefUtil(preferences: prefs);
+
+  DateTime currentTime = DateTime.now();
+
+  DateTime nexTime = DateTimeUtil.nextTime(
+      currentTime: currentTime,
+      intervalValue: dataTimerTask.intervalPre,
+      timeFrom: dataTimerTask.timeFrom,
+      timeUntil: dataTimerTask.timeUntil,
+      intervalSource: dataTimerTask.intervalSourcePre,
+      isTimeOnActivated: dataTimerTask.isTimeOffPre);
+
+  int intervalDelay = nexTime.difference(currentTime).inMinutes;
+
+  if (intervalDelay > dataTimerTask.intervalPre) {
+    BackgroundFetch.finish(taskId);
+    return;
+  } else if (intervalDelay <= dataTimerTask.intervalPre) {
+    List<String> messageListResault = [];
+    for (int i = 0; i < dataTimerTask.listMessagesPre.length; i++) {
+      if (dataTimerTask.listCheckMessagesPre.contains(i.toString()))
+        messageListResault..add(dataTimerTask.listMessagesPre[i]);
+    }
+
+    String messageResault = ' ';
+    for (int i = 0; i < Constants.lengthTaskList; i++) {
+      if (messageListResault.isNotEmpty) {
+        if (messageListResault.length > 1) {
+          var index = Random().nextInt(messageListResault.length);
+          messageResault = messageListResault[index];
+        } else if (messageListResault.length == 1) {
+          messageResault = messageListResault[0];
+        }
+      }
+    }
+    if (dataTimerTask.soundSourcePre < 3) {
+      String _soundSourcePath =
+          Constants.soundSourceArray[dataTimerTask.soundSourcePre];
+
+      await awesomeNotifications.setChannel(NotificationChannel(
+        channelKey: channelAwareness,
+        channelName: 'Norbu_Timer',
+        channelDescription: 'Timer settinings',
+        channelShowBadge: false,
+        playSound: true,
+        soundSource: _soundSourcePath,
+        enableVibration: false,
+        importance: NotificationImportance.High,
+      ));
+    } else if (dataTimerTask.soundSourcePre == 3) {
+      await awesomeNotifications.setChannel(NotificationChannel(
+          channelKey: channelAwareness,
+          channelName: 'Norbu_Timer',
+          channelDescription: 'Timer settinings',
+          channelShowBadge: false,
+          enableVibration: false,
+          defaultRingtoneType: DefaultRingtoneType.Notification,
+          importance: NotificationImportance.High));
+    }
+
+    await awesomeNotifications.createNotification(
+        content: NotificationContent(
+            id: 0,
+            channelKey: channelAwareness,
+            title: messageResault,
+            body: 'Таймер осознанности',
+            payload: {'uuid': 'user-profile-uuid1'}),
+        actionButtons: [
+          NotificationActionButton(
+            key: 'Settings_Timer',
+            label: 'Настройки таймера осознанности',
+            autoCancel: true,
+            buttonType: ActionButtonType.Default,
+          )
+        ],
+        schedule: NotificationCalendar.fromDate(date: nexTime.toUtc()));
+
+    BackgroundFetch.finish(taskId);
+  }
+}
+
+/// This event fires shortly before your task is about to timeout.  You must finish any outstanding work and call BackgroundFetch.finish(taskId).
+void _onBackgroundFetchTimeout(String taskId) {
+  print("[BackgroundFetch] TIMEOUT: $taskId");
+  BackgroundFetch.finish(taskId);
+}
 
 class NotificationService {
   final AwesomeNotifications _awesomeLocalNotifications;
@@ -27,7 +210,7 @@ class NotificationService {
 
   Future init() async {
     await _awesomeLocalNotifications
-        .initialize('resource://drawable/norbu_notific_large', []);
+        .initialize('resource://drawable/res_norbu_notific', []);
 
     await _awesomeLocalNotifications.isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
@@ -99,40 +282,36 @@ class NotificationService {
   }
 
   Future<void> setupNotificationsTaskForChannelAwareness({
-    int intervalSource,
     int intervalValue,
-    TimeOfDay timeFrom,
-    TimeOfDay timeUntil,
-    bool isTimeOnActivated,
-    List<String> messagesList,
-    NotificationImportance importance,
   }) async {
     await cancelNotificationsTaskForChannelAwareness();
-    List<int> listTimeFrom = [timeFrom.hour, timeFrom.minute];
-    List<int> listTimeUntil = [timeUntil.hour, timeUntil.minute];
 
-    DataTimer dataTimerTask = DataTimer(
-        intervalSource: intervalSource,
-        intervalValue: intervalValue,
-        timeFrom: listTimeFrom,
-        timeUntil: listTimeUntil,
-        soundSourcePath: _soundSourcePath,
-        messages: messagesList,
-        isTimeOnActivated: isTimeOnActivated);
+    try {
+      var status = await BackgroundFetch.configure(
+          BackgroundFetchConfig(
+            minimumFetchInterval: intervalValue,
+            forceAlarmManager: false,
+            stopOnTerminate: false,
+            startOnBoot: true,
+            enableHeadless: true,
+            requiresBatteryNotLow: false,
+            requiresCharging: false,
+            requiresStorageNotLow: false,
+            requiresDeviceIdle: false,
+            requiredNetworkType: NetworkType.NONE,
+          ),
+          _onBackgroundFetch,
+          _onBackgroundFetchTimeout);
+      print('[BackgroundFetch] configure success: $status');
+    } catch (e) {
+      print("[BackgroundFetch] configure ERROR: $e");
+    }
 
-    int intervalDelay = DateTimeUtil.intervalDelayInSeconds(
-        intervalValue: intervalValue,
-        timeFrom: listTimeFrom,
-        timeUntil: listTimeUntil,
-        intervalSource: intervalSource,
-        isTimeOnActivated: isTimeOnActivated);
-
-    Workmanager().registerOneOffTask(
-      tagAwaTask,
-      channelAwarenessDelayedTask,
-      inputData: dataTimerTask.toMap(),
-      initialDelay: Duration(seconds: intervalDelay),
-    );
+    BackgroundFetch.start().then((int status) {
+      print('[BackgroundFetch] start success: $status');
+    }).catchError((e) {
+      print('[BackgroundFetch] start FAILURE: $e');
+    });
 
     //_log.fine('Schedule notification at $notificationDateTime');
   }
@@ -159,8 +338,10 @@ class NotificationService {
   }
 
   Future<void> cancelNotificationsTaskForChannelAwareness() async {
-    //await cancelSchedule(1);
-    await cancelNotification(idAwa);
-    await Workmanager().cancelAll();
+    await cancelSchedule(0);
+    await cancelNotification(0);
+    BackgroundFetch.stop().then((int status) {
+      print('[BackgroundFetch] stop success: $status');
+    });
   }
 }

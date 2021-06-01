@@ -112,7 +112,9 @@ class _MessagesTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
-        buildWhen: (previous, current) => previous.messages != current.messages,
+        buildWhen: (previous, current) =>
+            previous.messages != current.messages ||
+            previous.checkMessages != current.checkMessages,
         builder: (context, state) {
           return Center(
               child: Column(
@@ -123,29 +125,42 @@ class _MessagesTextField extends StatelessWidget {
                     padding: EdgeInsets.fromLTRB(0, 0, 0, 8),
                     child: Center(child: Text('Messages'))),
                 for (int index = 0; index < 3; ++index)
-                  Container(
-                      width: 220,
-                      height: 40,
-                      child: TextField(
-                        key: PageStorageKey('Messages' + index.toString()),
-                        controller: TextEditingController()
-                          ..text = state.messages[index],
-                        keyboardType: TextInputType.text,
-                        style: Theme.of(context).textTheme.bodyText1,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(10.0)),
-                          ),
+                  Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Checkbox(
+                          value: state.checkMessages.contains(index.toString()),
+                          onChanged: (value) =>
+                              BlocProvider.of<NotificationTimerSettings>(
+                                      context)
+                                  .add(CheckMessage(index: index)),
                         ),
-                        onChanged: (String val) => EasyDebounce.debounce(
-                            'my-debouncer',
-                            Duration(milliseconds: 500),
-                            () => BlocProvider.of<NotificationTimerSettings>(
-                                    context)
-                                .add(ChangedMessages(
-                                    message: val, index: index))),
-                      ))
+                        Container(
+                            width: 220,
+                            height: 40,
+                            child: TextField(
+                              key:
+                                  PageStorageKey('Messages' + index.toString()),
+                              controller: TextEditingController()
+                                ..text = state.messages[index],
+                              keyboardType: TextInputType.text,
+                              style: Theme.of(context).textTheme.bodyText1,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                ),
+                              ),
+                              onChanged: (String val) => EasyDebounce.debounce(
+                                  'mess-debouncer',
+                                  Duration(milliseconds: 1000),
+                                  () => BlocProvider.of<
+                                          NotificationTimerSettings>(context)
+                                      .add(ChangedMessages(
+                                          message: val, index: index))),
+                            ))
+                      ]),
               ]));
         });
   }
@@ -225,9 +240,13 @@ class _IntervalTimeRadioButtons extends StatelessWidget {
                     onChanged: (double value) =>
                         BlocProvider.of<NotificationTimerSettings>(context)
                             .add(ChangedSliderVolume(volume: value)),
-                    onChangeEnd: (double value) =>
-                        BlocProvider.of<NotificationTimerSettings>(context).add(
-                            ChangedPreciseInterval(interval: value.toInt())),
+                    onChangeEnd: (double value) => EasyDebounce.debounce(
+                        'slider-debouncer',
+                        Duration(milliseconds: 3000),
+                        () =>
+                            BlocProvider.of<NotificationTimerSettings>(context)
+                                .add(ChangedPreciseInterval(
+                                    interval: value.toInt()))),
                   )),
                 ]),
               ]));

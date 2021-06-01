@@ -44,6 +44,7 @@ class Constants {
 
   static const String isActiveKey = 'isActive';
   static const String messagesKey = 'messages';
+  static const String checkMessagesKey = 'checkMessagesKey';
   static const String sliderValueKey = 'sliderValue';
   static const String intervalValueKey = 'intervalValue';
   static const String soundSourceKey = 'soundSource';
@@ -53,6 +54,7 @@ class Constants {
   static const String timeFromKeyMinute = 'timeFromMinute';
   static const String timeUntilKeyHour = 'timeUntilHour';
   static const String timeUntilKeyMinute = 'timeUntilMinute';
+  static const String stateBackFetch = 'stateBackFetch';
 
   static const List<String> soundSourceArray = [
     'resource://raw/res_rhy_bre_sound3_hold',
@@ -60,9 +62,9 @@ class Constants {
     'resource://raw/res_rhy_bre_sound2_inh'
   ];
 
+  static const int lengthTaskList = 100;
+
   static const List<int> timeIntervals = [
-    5,
-    10,
     15,
     20,
     25,

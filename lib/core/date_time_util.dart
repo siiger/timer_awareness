@@ -92,4 +92,24 @@ class DateTimeUtil {
 
     return nexTime.difference(currentTime).inSeconds;
   }
+
+  static int intervalDelayInMinutes({
+    int intervalValue,
+    TimeOfDay timeFrom,
+    TimeOfDay timeUntil,
+    int intervalSource,
+    bool isTimeOnActivated,
+  }) {
+    DateTime currentTime = DateTime.now();
+
+    DateTime nexTime = nextTime(
+        currentTime: currentTime,
+        intervalValue: intervalValue,
+        timeFrom: timeFrom,
+        timeUntil: timeUntil,
+        intervalSource: intervalSource,
+        isTimeOnActivated: isTimeOnActivated);
+
+    return nexTime.difference(currentTime).inMinutes;
+  }
 }

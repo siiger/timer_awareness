@@ -7,7 +7,6 @@ import 'package:meta/meta.dart';
 import 'package:equatable/equatable.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
-import 'package:norbu_timer/core/date_time_util.dart';
 import 'package:norbu_timer/notification_service.dart';
 import 'package:norbu_timer/core/constants.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -43,7 +42,8 @@ class NotificationTimerSettings
             preciseInterval: sl<SharedPrefUtil>().intervalPre,
             currentSliderVolume: sl<SharedPrefUtil>().sliderValuePre,
             soundSource: sl<SharedPrefUtil>().soundSourcePre,
-            messages: sl<SharedPrefUtil>().listMessagesPre));
+            messages: sl<SharedPrefUtil>().listMessagesPre,
+            checkMessages: sl<SharedPrefUtil>().listCheckMessagesPre));
 
   @override
   Stream<TimerSettingsState> mapEventToState(
@@ -75,6 +75,8 @@ class NotificationTimerSettings
       yield* _mapChangedTimeOffUntilToState(state, event);
     } else if (event is ChangedMessages) {
       yield* _mapChangedMessagesToState(state, event);
+    } else if (event is CheckMessage) {
+      yield* _mapCheckMessageToState(state, event);
     } else if (event is InitSettings) {
       yield* _mapInitSettingsToState(state, event);
     }
@@ -114,36 +116,25 @@ class NotificationTimerSettings
       await sl<SharedPrefUtil>().setActive(true);
 
       await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalSource: state.intervalSource,
-          intervalValue: state.preciseInterval,
-          isTimeOnActivated: state.isTimeOff,
-          timeFrom: state.timeFrom,
-          timeUntil: state.timeUntil,
-          messagesList: state.messages,
-          importance: NotificationImportance.High);
+          intervalValue: state.preciseInterval);
     } else {
-      await _notificationService.cancelNotificationsTaskForChannelAwareness();
       yield state.copyWith(isActive: false);
       await sl<SharedPrefUtil>().setActive(false);
+      await _notificationService.cancelNotificationsTaskForChannelAwareness();
     }
   }
 
   Stream<TimerSettingsState> _mapChangedPreciseIntervalToState(
       TimerSettingsState state, ChangedPreciseInterval event) async* {
-    if (state.isActive) {
-      await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalSource: state.intervalSource,
-          intervalValue: Constants.timeIntervals[event.interval],
-          isTimeOnActivated: state.isTimeOff,
-          timeFrom: state.timeFrom,
-          timeUntil: state.timeUntil,
-          messagesList: state.messages,
-          importance: NotificationImportance.High);
-    }
     yield state.copyWith(
         preciseInterval: Constants.timeIntervals[event.interval]);
     await sl<SharedPrefUtil>()
         .setInterval(Constants.timeIntervals[event.interval]);
+
+    if (state.isActive) {
+      await _notificationService.setupNotificationsTaskForChannelAwareness(
+          intervalValue: Constants.timeIntervals[event.interval]);
+    }
   }
 
   Stream<TimerSettingsState> _mapChangedSliderVolumeToState(
@@ -160,52 +151,40 @@ class NotificationTimerSettings
     yield state.copyWith(messages: mes);
     await sl<SharedPrefUtil>().setMessages(mes);
 
-    if (state.isActive) {
-      await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalSource: state.intervalSource,
-          intervalValue: state.preciseInterval,
-          isTimeOnActivated: state.isTimeOff,
-          timeFrom: state.timeFrom,
-          timeUntil: state.timeUntil,
-          messagesList: mes,
-          importance: NotificationImportance.High);
+    //_notificationService.setupNotificationMessages(messages: mes);
+  }
+
+  Stream<TimerSettingsState> _mapCheckMessageToState(
+      TimerSettingsState state, CheckMessage event) async* {
+    List<String> checkMess;
+    if (state.checkMessages.contains(event.index.toString())) {
+      checkMess = [...state.checkMessages]..remove(event.index.toString());
+    } else {
+      checkMess = [...state.checkMessages]..add(event.index.toString());
     }
+
+    yield state.copyWith(checkMessages: checkMess);
+    await sl<SharedPrefUtil>().setCheckMessages(checkMess);
   }
 
   Stream<TimerSettingsState> _mapChangedTimeOffFromToState(
       TimerSettingsState state, ChangedTimeOffFrom event) async* {
+    await sl<SharedPrefUtil>().setTimeOffFrom(event.timeFrom);
+    yield state.copyWith(timeFrom: event.timeFrom);
     if (state.isActive) {
       await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalSource: state.intervalSource,
-          intervalValue: state.preciseInterval,
-          isTimeOnActivated: state.isTimeOff,
-          timeFrom: event.timeFrom,
-          timeUntil: state.timeUntil,
-          messagesList: state.messages,
-          importance: NotificationImportance.High);
+          intervalValue: Constants.timeIntervals[state.preciseInterval]);
     }
-
-    await sl<SharedPrefUtil>().setTimeOffFrom(event.timeFrom);
-
-    yield state.copyWith(timeFrom: event.timeFrom);
   }
 
   Stream<TimerSettingsState> _mapChangedTimeOffUntilToState(
       TimerSettingsState state, ChangedTimeOffUntil event) async* {
+    await sl<SharedPrefUtil>().setTimeOffUntil(event.timeUntil);
+    yield state.copyWith(timeUntil: event.timeUntil);
     if (state.isActive) {
       await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalSource: state.intervalSource,
-          intervalValue: state.preciseInterval,
-          isTimeOnActivated: state.isTimeOff,
-          timeFrom: state.timeFrom,
-          timeUntil: event.timeUntil,
-          messagesList: state.messages,
-          importance: NotificationImportance.High);
+          intervalValue: Constants.timeIntervals[state.preciseInterval]);
     }
-
-    await sl<SharedPrefUtil>().setTimeOffUntil(event.timeUntil);
-
-    yield state.copyWith(timeUntil: event.timeUntil);
   }
 
   Stream<TimerSettingsState> _mapToggleSoundSourceToState(
@@ -218,16 +197,6 @@ class NotificationTimerSettings
 
   Stream<TimerSettingsState> _mapToggleIntervalSourceToState(
       TimerSettingsState state, ToggleIntervalSource event) async* {
-    if (state.isActive) {
-      await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalSource: event.value,
-          intervalValue: state.preciseInterval,
-          isTimeOnActivated: state.isTimeOff,
-          timeFrom: state.timeFrom,
-          timeUntil: state.timeUntil,
-          messagesList: state.messages,
-          importance: NotificationImportance.High);
-    }
     yield state.copyWith(intervalSource: event.value);
     await sl<SharedPrefUtil>().setIntervalSource(event.value);
   }
@@ -235,31 +204,16 @@ class NotificationTimerSettings
   Stream<TimerSettingsState> _mapToggleOffTimePerDayToState(
       TimerSettingsState state, ToggleOffTimePerDay event) async* {
     if (!state.isTimeOff) {
-      if (state.isActive) {
-        await _notificationService.setupNotificationsTaskForChannelAwareness(
-            intervalSource: state.intervalSource,
-            intervalValue: state.preciseInterval,
-            isTimeOnActivated: true,
-            timeFrom: state.timeFrom,
-            timeUntil: state.timeUntil,
-            messagesList: state.messages,
-            importance: NotificationImportance.High);
-      }
       yield state.copyWith(isTimeOff: true);
       await sl<SharedPrefUtil>().setTimeOffPerDay(true);
     } else {
-      if (state.isActive) {
-        await _notificationService.setupNotificationsTaskForChannelAwareness(
-            intervalSource: state.intervalSource,
-            intervalValue: state.preciseInterval,
-            isTimeOnActivated: false,
-            timeFrom: state.timeFrom,
-            timeUntil: state.timeUntil,
-            messagesList: state.messages,
-            importance: NotificationImportance.High);
-      }
       yield state.copyWith(isTimeOff: false);
       await sl<SharedPrefUtil>().setTimeOffPerDay(false);
+    }
+
+    if (state.isActive) {
+      await _notificationService.setupNotificationsTaskForChannelAwareness(
+          intervalValue: Constants.timeIntervals[state.preciseInterval]);
     }
   }
 

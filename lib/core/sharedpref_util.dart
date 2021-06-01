@@ -11,6 +11,7 @@ class SharedPrefUtil {
         _preferences = preferences {
     isActivePre = _preferences.getBool(Constants.isActiveKey);
     listMessagesPre = _preferences.getStringList(Constants.messagesKey);
+    listCheckMessagesPre = getCheckListMessages();
     sliderValuePre = _preferences.getDouble(Constants.sliderValueKey);
     intervalPre = _preferences.getInt(Constants.intervalValueKey);
     soundSourcePre = _preferences.getInt(Constants.soundSourceKey);
@@ -18,10 +19,12 @@ class SharedPrefUtil {
     isTimeOffPre = _preferences.getBool(Constants.isTimeOffKey);
     timeFrom = getTimeOffFrom();
     timeUntil = getTimeOffUntil();
+    stateBackFetch = _preferences.getBool(Constants.stateBackFetch);
     if (listMessagesPre == null) listMessagesPre = Constants.listMessages;
     if (intervalSourcePre == null) intervalSourcePre = 0;
     if (soundSourcePre == null) soundSourcePre = 0;
     if (isActivePre == null) isActivePre = false;
+    if (stateBackFetch == null) stateBackFetch = false;
     if (isTimeOffPre == null) isTimeOffPre = true;
     if (sliderValuePre == null) sliderValuePre = 8.0;
     if (intervalPre == null)
@@ -30,6 +33,7 @@ class SharedPrefUtil {
 
   bool isActivePre;
   List<String> listMessagesPre;
+  List<String> listCheckMessagesPre;
   double sliderValuePre;
   int intervalPre;
   int soundSourcePre;
@@ -37,6 +41,27 @@ class SharedPrefUtil {
   bool isTimeOffPre;
   TimeOfDay timeFrom;
   TimeOfDay timeUntil;
+  bool stateBackFetch;
+
+  bool get isActivePref => _preferences.getBool(Constants.isActiveKey) ?? false;
+  List<String> get listMessagesPref =>
+      _preferences.getStringList(Constants.messagesKey) ??
+      Constants.listMessages;
+  List<String> get listCheckMessagesPref => getCheckListMessages();
+  int get intervalPref =>
+      _preferences.getInt(Constants.intervalValueKey) ??
+      Constants.timeIntervals[sliderValuePre.toInt()];
+  int get soundSourcePref => _preferences.getInt(Constants.soundSourceKey) ?? 0;
+  int get intervalSourcePref =>
+      _preferences.getInt(Constants.intervalSourceKey) ?? 0;
+  bool get isTimeOffPref =>
+      _preferences.getBool(Constants.isTimeOffKey) ?? true;
+
+  TimeOfDay get timeFromPref => getTimeOffFrom();
+  TimeOfDay get timeUntilPref => getTimeOffUntil();
+
+  bool get stateBackFetchPref =>
+      _preferences.getBool(Constants.stateBackFetch) ?? false;
 
   Future<void> setActive(bool isActive) async {
     await _preferences.setBool(Constants.isActiveKey, isActive);
@@ -92,6 +117,26 @@ class SharedPrefUtil {
     if (minute == null) minute = 0;
     return TimeOfDay(hour: hour, minute: minute);
   }
-  //
 
+  List<String> getCheckListMessages() {
+    List<String> listPre =
+        _preferences.getStringList(Constants.checkMessagesKey);
+    List<String> list;
+    if (listPre == null) {
+      listPre = ["0", "1", "2"];
+    } else {
+      //list = listPre.map((item) => int.parse(item))?.toList();
+    }
+
+    return listPre;
+  }
+
+  Future<void> setCheckMessages(List<String> list) async {
+    await _preferences.setStringList(Constants.checkMessagesKey, list);
+  }
+
+  //
+  Future<void> setStateBackFetch(bool init) async {
+    await _preferences.setBool(Constants.stateBackFetch, init);
+  }
 }
