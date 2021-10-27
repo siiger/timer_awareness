@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:norbu_timer/src/common_widgets/custom_container.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 
-class TimerPage extends StatelessWidget {
+class TimerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
