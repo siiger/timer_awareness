@@ -3,12 +3,12 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:norbu_timer/routes.dart';
-import 'package:norbu_timer/core/constants.dart';
+import 'package:norbu_timer/src/config/routes.dart';
+import 'package:norbu_timer/src/features/timer/util/timer_strings_util.dart';
 import 'package:background_fetch/background_fetch.dart';
-import 'package:norbu_timer/core/date_time_util.dart';
+import 'package:norbu_timer/src/core/utils/date_time_util.dart';
 import 'package:norbu_timer/service_locator.dart';
-import 'package:norbu_timer/core/sharedpref_util.dart';
+import 'package:norbu_timer/src/services/local_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// This "Headless Task" is run when app is terminated.
@@ -22,7 +22,7 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
   }
 
   var prefs = await SharedPreferences.getInstance();
-  final SharedPrefUtil dataTimerTask = SharedPrefUtil(preferences: prefs);
+  final LocalStorageService dataTimerTask = LocalStorageService(preferences: prefs);
 
   DateTime currentTime = DateTime.now();
 
@@ -47,7 +47,7 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
     }
 
     String messageResault = ' ';
-    for (int i = 0; i < Constants.lengthTaskList; i++) {
+    for (int i = 0; i < TimerStringsUtil.lengthTaskList; i++) {
       if (messageListResault.isNotEmpty) {
         if (messageListResault.length > 1) {
           var index = Random().nextInt(messageListResault.length);
@@ -58,8 +58,7 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
       }
     }
     if (dataTimerTask.soundSourcePre < 3) {
-      String _soundSourcePath =
-          Constants.soundSourceArray[dataTimerTask.soundSourcePre];
+      String _soundSourcePath = TimerStringsUtil.soundSourceArray[dataTimerTask.soundSourcePre];
 
       await awesomeNotifications.setChannel(NotificationChannel(
         channelKey: channelAwareness,
@@ -105,7 +104,7 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
 
 void _onBackgroundFetch(String taskId) async {
   var prefs = await SharedPreferences.getInstance();
-  final SharedPrefUtil dataTimerTask = SharedPrefUtil(preferences: prefs);
+  final LocalStorageService dataTimerTask = LocalStorageService(preferences: prefs);
 
   DateTime currentTime = DateTime.now();
 
@@ -130,7 +129,7 @@ void _onBackgroundFetch(String taskId) async {
     }
 
     String messageResault = ' ';
-    for (int i = 0; i < Constants.lengthTaskList; i++) {
+    for (int i = 0; i < TimerStringsUtil.lengthTaskList; i++) {
       if (messageListResault.isNotEmpty) {
         if (messageListResault.length > 1) {
           var index = Random().nextInt(messageListResault.length);
@@ -141,8 +140,7 @@ void _onBackgroundFetch(String taskId) async {
       }
     }
     if (dataTimerTask.soundSourcePre < 3) {
-      String _soundSourcePath =
-          Constants.soundSourceArray[dataTimerTask.soundSourcePre];
+      String _soundSourcePath = TimerStringsUtil.soundSourceArray[dataTimerTask.soundSourcePre];
 
       await awesomeNotifications.setChannel(NotificationChannel(
         channelKey: channelAwareness,
@@ -197,8 +195,7 @@ class NotificationService {
   final GlobalKey<NavigatorState> _navigatorKey;
 
   NotificationService(
-      {@required AwesomeNotifications awesomeLocalNotifications,
-      @required GlobalKey<NavigatorState> navigatorKey})
+      {@required AwesomeNotifications awesomeLocalNotifications, @required GlobalKey<NavigatorState> navigatorKey})
       : assert(awesomeLocalNotifications != null, navigatorKey != null),
         _awesomeLocalNotifications = awesomeLocalNotifications,
         _navigatorKey = navigatorKey;
@@ -206,11 +203,10 @@ class NotificationService {
   StreamSubscription<ReceivedAction> _actionStream;
 
   List<String> _notificationMessages = [];
-  String _soundSourcePath = Constants.soundSourceArray[0];
+  String _soundSourcePath = TimerStringsUtil.soundSourceArray[0];
 
   Future init() async {
-    await _awesomeLocalNotifications
-        .initialize('resource://drawable/res_norbu_notific', []);
+    await _awesomeLocalNotifications.initialize('resource://drawable/res_norbu_notific', []);
 
     await _awesomeLocalNotifications.isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
@@ -218,8 +214,7 @@ class NotificationService {
       }
     });
 
-    _actionStream =
-        _awesomeLocalNotifications.actionStream.listen((receivedNotification) {
+    _actionStream = _awesomeLocalNotifications.actionStream.listen((receivedNotification) {
       if (!StringUtils.isNullOrEmpty(receivedNotification.buttonKeyPressed) &&
           receivedNotification.buttonKeyPressed.startsWith('Settings_')) {
         processSettingsControls(receivedNotification);
@@ -239,8 +234,8 @@ class NotificationService {
     String targetPage;
     targetPage = PAGE_NOTIFICATION_HOME;
     // Avoid to open the notification details page over another details page already opened
-    _navigatorKey.currentState.pushNamedAndRemoveUntil(targetPage,
-        (route) => (route.settings.name != targetPage) || route.isFirst,
+    _navigatorKey.currentState.pushNamedAndRemoveUntil(
+        targetPage, (route) => (route.settings.name != targetPage) || route.isFirst,
         arguments: receivedNotification);
   }
 
@@ -249,15 +244,15 @@ class NotificationService {
     String targetPage;
     targetPage = PAGE_SETTINGS;
 
-    _navigatorKey.currentState.pushNamedAndRemoveUntil(targetPage,
-        (route) => (route.settings.name != targetPage) || route.isFirst);
+    _navigatorKey.currentState
+        .pushNamedAndRemoveUntil(targetPage, (route) => (route.settings.name != targetPage) || route.isFirst);
   }
 
   Future<void> setupChannelAwarness({
     int soundSource,
   }) async {
     if (soundSource < 3) {
-      _soundSourcePath = Constants.soundSourceArray[soundSource];
+      _soundSourcePath = TimerStringsUtil.soundSourceArray[soundSource];
 
       await _awesomeLocalNotifications.setChannel(NotificationChannel(
         channelKey: channelAwareness,

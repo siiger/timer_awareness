@@ -1,41 +1,27 @@
-import 'package:norbu_timer/core/math_util.dart';
+import 'package:norbu_timer/src/core/utils/math_util.dart';
 import 'package:flutter/material.dart';
 
 class DateTimeUtil {
   DateTimeUtil._();
 
   static DateTime nextTimeWithConditions(
-      {DateTime currentTime,
-      int intervalValue,
-      TimeOfDay timeFrom,
-      TimeOfDay timeUntil}) {
+      {DateTime currentTime, int intervalValue, TimeOfDay timeFrom, TimeOfDay timeUntil}) {
     DateTime result;
     result = currentTime.add(Duration(minutes: intervalValue));
     if (timeFrom.hour > timeUntil.hour) {
-      if (result.isAfter(DateTime(result.year, result.month, result.day,
-              timeUntil.hour, timeUntil.minute)) &&
-          result.isBefore(DateTime(result.year, result.month, result.day,
-              timeFrom.hour, timeFrom.minute))) {
-      } else if (result.isBefore(DateTime(result.year, result.month, result.day,
-          timeUntil.hour, timeUntil.minute))) {
-        result = DateTime(result.year, result.month, result.day, timeUntil.hour,
-            timeUntil.minute);
-      } else if (result.isAfter(DateTime(result.year, result.month, result.day,
-          timeFrom.hour, timeFrom.minute))) {
-        result = DateTime(result.year, result.month, result.day + 1,
-            timeUntil.hour, timeUntil.minute);
+      if (result.isAfter(DateTime(result.year, result.month, result.day, timeUntil.hour, timeUntil.minute)) &&
+          result.isBefore(DateTime(result.year, result.month, result.day, timeFrom.hour, timeFrom.minute))) {
+      } else if (result.isBefore(DateTime(result.year, result.month, result.day, timeUntil.hour, timeUntil.minute))) {
+        result = DateTime(result.year, result.month, result.day, timeUntil.hour, timeUntil.minute);
+      } else if (result.isAfter(DateTime(result.year, result.month, result.day, timeFrom.hour, timeFrom.minute))) {
+        result = DateTime(result.year, result.month, result.day + 1, timeUntil.hour, timeUntil.minute);
       }
     } else if (timeFrom.hour < timeUntil.hour) {
-      if (result.isAfter(DateTime(result.year, result.month, result.day,
-              timeUntil.hour, timeUntil.minute)) ||
-          result.isBefore(DateTime(result.year, result.month, result.day,
-              timeFrom.hour, timeFrom.minute))) {
-      } else if (result.isAfter(DateTime(result.year, result.month, result.day,
-              timeFrom.hour, timeFrom.minute)) &&
-          result.isBefore(DateTime(result.year, result.month, result.day,
-              timeUntil.hour, timeUntil.minute))) {
-        result = DateTime(result.year, result.month, result.day, timeUntil.hour,
-            timeUntil.minute);
+      if (result.isAfter(DateTime(result.year, result.month, result.day, timeUntil.hour, timeUntil.minute)) ||
+          result.isBefore(DateTime(result.year, result.month, result.day, timeFrom.hour, timeFrom.minute))) {
+      } else if (result.isAfter(DateTime(result.year, result.month, result.day, timeFrom.hour, timeFrom.minute)) &&
+          result.isBefore(DateTime(result.year, result.month, result.day, timeUntil.hour, timeUntil.minute))) {
+        result = DateTime(result.year, result.month, result.day, timeUntil.hour, timeUntil.minute);
       }
     }
     return result;
@@ -62,10 +48,7 @@ class DateTimeUtil {
 
     if (isTimeOnActivated) {
       result = nextTimeWithConditions(
-          currentTime: currentTime,
-          intervalValue: intervalRes,
-          timeFrom: timeFrom,
-          timeUntil: timeUntil);
+          currentTime: currentTime, intervalValue: intervalRes, timeFrom: timeFrom, timeUntil: timeUntil);
     } else {
       result = currentTime.add(Duration(minutes: intervalRes));
     }

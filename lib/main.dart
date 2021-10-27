@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:norbu_timer/bloc_timer_settings/timer_settings_bloc.dart';
-import 'package:norbu_timer/timer_page.dart';
-import 'package:norbu_timer/routes.dart';
+import 'package:norbu_timer/src/features/timer/blocs/bloc_timer_settings/timer_settings_bloc.dart';
+import 'package:norbu_timer/src/features/timer/timer_page.dart';
+import 'package:norbu_timer/src/config/routes.dart';
 import 'package:norbu_timer/service_locator.dart';
-import 'package:norbu_timer/notification_service.dart';
-import 'package:norbu_timer/widgets/notifications_home_page.dart';
+import 'package:norbu_timer/src/services/notification_service.dart';
+import 'package:norbu_timer/src/common_widgets/notifications_home_page.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 void main() async {
@@ -22,8 +22,7 @@ class App extends StatelessWidget {
       providers: [
         BlocProvider(
             create: (context) => NotificationTimerSettings(
-                notificationService: sl<NotificationService>(),
-                audioPlayer: sl<AudioPlayer>())
+                notificationService: sl<NotificationService>(), audioPlayer: sl<AudioPlayer>())
               ..add(InitSettings()),
             child: TimerPage()),
       ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:norbu_timer/timer_page.dart';
-import 'package:norbu_timer/widgets/notification_details_page.dart';
-import 'package:norbu_timer/widgets/notifications_home_page.dart';
+import 'package:norbu_timer/src/features/timer/timer_page.dart';
+import 'package:norbu_timer/src/common_widgets/notification_details_page.dart';
+import 'package:norbu_timer/src/common_widgets/notifications_home_page.dart';
 
 //const String PAGE_HOME = '/';
 const String PAGE_MEDIA_DETAILS = '/media-details';

@@ -10,7 +10,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:progressive_image/progressive_image.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:norbu_timer/routes.dart';
+import 'package:norbu_timer/src/config/routes.dart';
 
 class NotificationHomePage extends StatefulWidget {
   //String get results => receivedNotification.toString();

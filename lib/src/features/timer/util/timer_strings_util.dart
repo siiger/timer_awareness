@@ -1,33 +1,11 @@
-class Constants {
-  static const List<String> soundMode = [
-    'Bell Di Mayo   ',
-    'Bell   ',
-    'Tibetian Bowl     ',
-    'System    '
-  ];
+class TimerStringsUtil {
+  static const List<String> soundMode = ['Bell Di Mayo   ', 'Bell   ', 'Tibetian Bowl     ', 'System    '];
 
-  static List<String> listMessages = [
-    'Поблагодари себя.',
-    'Да, я в моменте!',
-    'Ура, я есть!'
-  ];
+  static List<String> listMessages = ['Поблагодари себя.', 'Да, я в моменте!', 'Ура, я есть!'];
   static const List<String> intervalMode = ['Precise  ', 'Random'];
-  static const List<String> vibrationMode = [
-    'Without   ',
-    'Low   ',
-    'Medium   ',
-    'Hight   '
-  ];
+  static const List<String> vibrationMode = ['Without   ', 'Low   ', 'Medium   ', 'Hight   '];
 
-  static const List<String> dayName = [
-    'MON',
-    'TUE',
-    'WED',
-    'THU',
-    'FRI',
-    'SAT',
-    'SUN'
-  ];
+  static const List<String> dayName = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   static String showStringTime(int i) {
     String res = '';

@@ -7,8 +7,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:norbu_timer/core/date_time_util.dart';
-import 'package:norbu_timer/core/math_util.dart';
+import 'package:norbu_timer/src/core/utils/date_time_util.dart';
+import 'package:norbu_timer/src/core/utils/math_util.dart';
 
 import 'package:norbu_timer/main.dart';
 
@@ -21,8 +21,7 @@ void main() {
   print(time);
   int intervalValue = 5;
   int randomMin = intervalValue - (intervalValue / 2).round();
-  List<int> listIntervals = new List<int>.generate(
-      10, (i) => MathUtil.random(randomMin, intervalValue));
+  List<int> listIntervals = new List<int>.generate(10, (i) => MathUtil.random(randomMin, intervalValue));
   print(listIntervals);
   /*testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
