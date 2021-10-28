@@ -7,7 +7,7 @@ import 'package:meta/meta.dart';
 import 'package:equatable/equatable.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
-import 'package:norbu_timer/src/services/notification_service.dart';
+import 'package:norbu_timer/src/services/background_service.dart';
 import 'package:norbu_timer/src/features/timer/util/timer_strings_util.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
@@ -19,28 +19,29 @@ part 'timer_settings_event.dart';
 part 'timer_settings_state.dart';
 
 class NotificationTimerSettings extends Bloc<TimerSettingsEvent, TimerSettingsState> {
-  final NotificationService _notificationService;
+  final BackgroundService _backgroundService;
+  final LocalStorageService _localStorageService;
   final AudioPlayer _audioPlayer;
 
-  NotificationTimerSettings({@required NotificationService notificationService, @required AudioPlayer audioPlayer})
-      : assert(notificationService != null, audioPlayer != null),
-        _notificationService = notificationService,
+  NotificationTimerSettings({
+    @required BackgroundService backgroundService,
+    @required AudioPlayer audioPlayer,
+    @required LocalStorageService localStorageService,
+  })  : assert(localStorageService != null, backgroundService != null),
+        _backgroundService = backgroundService,
         _audioPlayer = audioPlayer,
+        _localStorageService = localStorageService,
         super(TimerSettingsState(
-            isActive: sl<LocalStorageService>().isActivePre,
-            isCallingMode: false,
-            isFlightMode: false,
-            isMusicPlaying: false,
-            intervalSource: sl<LocalStorageService>().intervalSourcePre,
-            isTimeOff: sl<LocalStorageService>().isTimeOffPre,
-            isSilentMode: false,
-            timeFrom: sl<LocalStorageService>().timeFrom,
-            timeUntil: sl<LocalStorageService>().timeUntil,
-            preciseInterval: sl<LocalStorageService>().intervalPre,
-            currentSliderVolume: sl<LocalStorageService>().sliderValuePre,
-            soundSource: sl<LocalStorageService>().soundSourcePre,
-            messages: sl<LocalStorageService>().listMessagesPre,
-            checkMessages: sl<LocalStorageService>().listCheckMessagesPre));
+            isActive: localStorageService.isTimerActived,
+            intervalSource: localStorageService.timerIntervalSource,
+            isTimeOff: localStorageService.isTimerTimeOff,
+            timeFrom: localStorageService.timerTimeFrom,
+            timeUntil: localStorageService.timerTimeUntil,
+            preciseInterval: localStorageService.timerInterval,
+            currentSliderVolume: localStorageService.timerSliderValue,
+            soundSource: localStorageService.timerSoundSource,
+            messages: localStorageService.timerListMessages,
+            checkMessages: localStorageService.timerListCheckMessages));
 
   @override
   Stream<TimerSettingsState> mapEventToState(
@@ -56,14 +57,6 @@ class NotificationTimerSettings extends Bloc<TimerSettingsEvent, TimerSettingsSt
       yield* _mapToggleSoundSourceToState(state, event);
     } else if (event is ToggleOffTimePerDay) {
       yield* _mapToggleOffTimePerDayToState(state, event);
-    } else if (event is ToggleOffWhenFlightMode) {
-      yield* _mapToggleOffWhenFlightModeToState(state, event);
-    } else if (event is ToggleOffWhenCallingMode) {
-      yield* _mapToggleOffWhenCallingModeToState(state, event);
-    } else if (event is ToggleOffWhenMusicPlaying) {
-      yield* _mapToggleOffWhenMusicPlayingToState(state, event);
-    } else if (event is ToggleOffWhenSilentMode) {
-      yield* _mapToggleOffWhenSilentModeToState(state, event);
     } else if (event is ToggleIntervalSource) {
       yield* _mapToggleIntervalSourceToState(state, event);
     } else if (event is ChangedTimeOffFrom) {
@@ -80,7 +73,8 @@ class NotificationTimerSettings extends Bloc<TimerSettingsEvent, TimerSettingsSt
   }
 
   Stream<TimerSettingsState> _mapInitSettingsToState(TimerSettingsState state, InitSettings event) async* {
-    await _notificationService.setupChannelAwarness(soundSource: state.soundSource);
+    List<String> mes = _localStorageService.timerListMessages;
+    yield state.copyWith(messages: mes);
   }
 
   Future<ByteData> _loadAsset(String soundPath) async {
@@ -102,40 +96,53 @@ class NotificationTimerSettings extends Bloc<TimerSettingsEvent, TimerSettingsSt
 
   Stream<TimerSettingsState> _mapToggleNotificationServiceToState(TimerSettingsState state) async* {
     if (!state.isActive) {
-      _notificationService.setupNotificationMessages(messages: state.messages);
+      //_notificationService.setupNotificationMessages(messages: state.messages);
       yield state.copyWith(isActive: true);
-      await sl<LocalStorageService>().setActive(true);
+      _localStorageService.setTimerActive = true;
 
-      await _notificationService.setupNotificationsTaskForChannelAwareness(intervalValue: state.preciseInterval);
+      // Для backgroundFetchHeadlessTask чтобы строго задать переменные
+      _localStorageService.setTimerInterval = state.preciseInterval;
+      _localStorageService.setTimerSliderVolume = state.currentSliderVolume;
+      _localStorageService.setTimerMessages = state.messages;
+      _localStorageService.setTimerCheckMessages = state.checkMessages;
+      await _localStorageService.setTimerTimeOffFrom(state.timeFrom);
+      await _localStorageService.setTimerTimeOffUntil(state.timeUntil);
+      _localStorageService.setTimerSoundSource = state.soundSource;
+      _localStorageService.setTimerIntervalSource = state.intervalSource;
+      _localStorageService.setTimerTimeOffPerDay = state.isTimeOff;
+      _localStorageService.setNotificationLabelButton = TimerStringsUtil().notificationLabelButton;
+      _localStorageService.setNotificationBody = TimerStringsUtil().notificationBody;
+      //
+
+      await _backgroundService.setupBackgroundTask(intervalValue: state.preciseInterval);
     } else {
       yield state.copyWith(isActive: false);
-      await sl<LocalStorageService>().setActive(false);
-      await _notificationService.cancelNotificationsTaskForChannelAwareness();
+      _localStorageService.setTimerActive = false;
+      await _backgroundService.cancelBackgroundTask();
     }
   }
 
   Stream<TimerSettingsState> _mapChangedPreciseIntervalToState(
       TimerSettingsState state, ChangedPreciseInterval event) async* {
     yield state.copyWith(preciseInterval: TimerStringsUtil.timeIntervals[event.interval]);
-    await sl<LocalStorageService>().setInterval(TimerStringsUtil.timeIntervals[event.interval]);
+    _localStorageService.setTimerInterval = TimerStringsUtil.timeIntervals[event.interval];
 
     if (state.isActive) {
-      await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalValue: TimerStringsUtil.timeIntervals[event.interval]);
+      await _backgroundService.setupBackgroundTask(intervalValue: TimerStringsUtil.timeIntervals[event.interval]);
     }
   }
 
   Stream<TimerSettingsState> _mapChangedSliderVolumeToState(
       TimerSettingsState state, ChangedSliderVolume event) async* {
     yield state.copyWith(currentSliderVolume: event.volume);
-    await sl<LocalStorageService>().setSliderVolume(event.volume);
+    _localStorageService.setTimerSliderVolume = event.volume;
   }
 
   Stream<TimerSettingsState> _mapChangedMessagesToState(TimerSettingsState state, ChangedMessages event) async* {
     List<String> mes = state.messages..replaceRange(event.index, event.index + 1, [event.message]);
 
     yield state.copyWith(messages: mes);
-    await sl<LocalStorageService>().setMessages(mes);
+    _localStorageService.setTimerMessages = mes;
 
     //_notificationService.setupNotificationMessages(messages: mes);
   }
@@ -149,114 +156,51 @@ class NotificationTimerSettings extends Bloc<TimerSettingsEvent, TimerSettingsSt
     }
 
     yield state.copyWith(checkMessages: checkMess);
-    await sl<LocalStorageService>().setCheckMessages(checkMess);
+    _localStorageService.setTimerCheckMessages = checkMess;
   }
 
   Stream<TimerSettingsState> _mapChangedTimeOffFromToState(TimerSettingsState state, ChangedTimeOffFrom event) async* {
-    await sl<LocalStorageService>().setTimeOffFrom(event.timeFrom);
+    await _localStorageService.setTimerTimeOffFrom(event.timeFrom);
     yield state.copyWith(timeFrom: event.timeFrom);
     if (state.isActive) {
-      await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalValue: TimerStringsUtil.timeIntervals[state.preciseInterval]);
+      await _backgroundService.setupBackgroundTask(intervalValue: state.preciseInterval);
     }
   }
 
   Stream<TimerSettingsState> _mapChangedTimeOffUntilToState(
       TimerSettingsState state, ChangedTimeOffUntil event) async* {
-    await sl<LocalStorageService>().setTimeOffUntil(event.timeUntil);
+    await _localStorageService.setTimerTimeOffUntil(event.timeUntil);
     yield state.copyWith(timeUntil: event.timeUntil);
     if (state.isActive) {
-      await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalValue: TimerStringsUtil.timeIntervals[state.preciseInterval]);
+      await _backgroundService.setupBackgroundTask(intervalValue: state.preciseInterval);
     }
   }
 
   Stream<TimerSettingsState> _mapToggleSoundSourceToState(TimerSettingsState state, ToggleSoundSource event) async* {
     await _playLocal(event.value);
     yield state.copyWith(soundSource: event.value);
-    await sl<LocalStorageService>().setSoundSource(event.value);
-    await _notificationService.setupChannelAwarness(soundSource: event.value);
+    _localStorageService.setTimerSoundSource = event.value;
+    //await _notificationService.setupChannelAwarness(soundSource: event.value);
   }
 
   Stream<TimerSettingsState> _mapToggleIntervalSourceToState(
       TimerSettingsState state, ToggleIntervalSource event) async* {
     yield state.copyWith(intervalSource: event.value);
-    await sl<LocalStorageService>().setIntervalSource(event.value);
+    _localStorageService.setTimerIntervalSource = event.value;
   }
 
   Stream<TimerSettingsState> _mapToggleOffTimePerDayToState(
       TimerSettingsState state, ToggleOffTimePerDay event) async* {
     if (!state.isTimeOff) {
       yield state.copyWith(isTimeOff: true);
-      await sl<LocalStorageService>().setTimeOffPerDay(true);
+      _localStorageService.setTimerTimeOffPerDay = true;
     } else {
       yield state.copyWith(isTimeOff: false);
-      await sl<LocalStorageService>().setTimeOffPerDay(false);
+      _localStorageService.setTimerTimeOffPerDay = false;
     }
 
     if (state.isActive) {
-      await _notificationService.setupNotificationsTaskForChannelAwareness(
-          intervalValue: TimerStringsUtil.timeIntervals[state.preciseInterval]);
-    }
-  }
-
-  Stream<TimerSettingsState> _mapToggleOffWhenFlightModeToState(
-      TimerSettingsState state, ToggleOffWhenFlightMode event) async* {
-    if (state.isActive) {
-      if (!state.isFlightMode) {
-        String date = '0 0/${state.preciseInterval} * * * ? *';
-        //await showNotification(3, date, channelNameKey[state.soundSource]);
-        yield state.copyWith(isFlightMode: true);
-      } else {
-        //await cancelSchedule(3);
-        //await event.device.disconnect();
-        yield state.copyWith(isFlightMode: false);
-      }
-    }
-  }
-
-  Stream<TimerSettingsState> _mapToggleOffWhenCallingModeToState(
-      TimerSettingsState state, ToggleOffWhenCallingMode event) async* {
-    if (state.isActive) {
-      if (!state.isCallingMode) {
-        String date = '0 0/${state.preciseInterval} * * * ? *';
-        //await showNotification(3, date, channelNameKey[state.soundSource]);
-        yield state.copyWith(isCallingMode: true);
-      } else {
-        //await cancelSchedule(3);
-        //await event.device.disconnect();
-        yield state.copyWith(isCallingMode: false);
-      }
-    }
-  }
-
-  Stream<TimerSettingsState> _mapToggleOffWhenMusicPlayingToState(
-      TimerSettingsState state, ToggleOffWhenMusicPlaying event) async* {
-    if (state.isActive) {
-      if (!state.isMusicPlaying) {
-        String date = '0 0/${state.preciseInterval} * * * ? *';
-        //await showNotification(3, date, channelNameKey[state.soundSource]);
-        yield state.copyWith(isMusicPlaying: true);
-      } else {
-        //await cancelSchedule(3);
-        //await event.device.disconnect();
-        yield state.copyWith(isMusicPlaying: false);
-      }
-    }
-  }
-
-  Stream<TimerSettingsState> _mapToggleOffWhenSilentModeToState(
-      TimerSettingsState state, ToggleOffWhenSilentMode event) async* {
-    if (state.isActive) {
-      if (!state.isSilentMode) {
-        String date = '0 0/${state.preciseInterval} * * * ? *';
-        //await showNotification(3, date, channelNameKey[state.soundSource]);
-        yield state.copyWith(isSilentMode: true);
-      } else {
-        //await cancelSchedule(3);
-        //await event.device.disconnect();
-        yield state.copyWith(isSilentMode: false);
-      }
+      await _backgroundService.setupBackgroundTask(intervalValue: state.preciseInterval);
     }
   }
 }

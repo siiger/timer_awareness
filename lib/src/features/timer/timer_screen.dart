@@ -12,7 +12,7 @@ class TimerScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('Norbu-Timer'),
+          title: Text('Timer Awareness'),
           actions: [],
         ),
         body: SingleChildScrollView(
@@ -36,47 +36,6 @@ class TimerScreen extends StatelessWidget {
                   ]),
                 ))));
   }
-  /*
-  void requestUserPermission(bool isAllowed) async {
-      showDialog(
-          context: context,
-          builder: (_) =>
-              NetworkGiffyDialog(
-                buttonOkText: Text('Allow', style: TextStyle(color: Colors.white)),
-                buttonCancelText: Text('Later', style: TextStyle(color: Colors.white)),
-                buttonCancelColor: Colors.grey,
-                buttonOkColor: Colors.deepPurple,
-                buttonRadius: 0.0,
-                image: Image.asset("assets/images/animated-bell.gif", fit: BoxFit.cover),
-                title: Text('Get Notified!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 22.0,
-                        fontWeight: FontWeight.w600)
-                ),
-                description: Text('Allow Awesome Notifications to send you beautiful notifications!',
-                  textAlign: TextAlign.center,
-                ),
-                entryAnimation: EntryAnimation.DEFAULT,
-                onCancelButtonPressed: () async {
-                  Navigator.of(context).pop();
-                  notificationsAllowed = await AwesomeNotifications().isNotificationAllowed();
-                  setState(() {
-                    notificationsAllowed = notificationsAllowed;
-                  });
-                },
-                onOkButtonPressed: () async {
-                  Navigator.of(context).pop();
-                  await AwesomeNotifications().requestPermissionToSendNotifications();
-                  notificationsAllowed = await AwesomeNotifications().isNotificationAllowed();
-                  setState(() {
-                    notificationsAllowed = notificationsAllowed;
-                  });
-                },
-              )
-      );
-  }
-  */
 }
 
 class _AcceptSwitchButton extends StatelessWidget {

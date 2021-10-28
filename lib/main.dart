@@ -4,7 +4,8 @@ import 'package:norbu_timer/src/features/timer/blocs/bloc_timer_settings/timer_s
 import 'package:norbu_timer/src/features/timer/timer_screen.dart';
 import 'package:norbu_timer/src/config/routes.dart';
 import 'package:norbu_timer/service_locator.dart';
-import 'package:norbu_timer/src/services/notification_service.dart';
+import 'package:norbu_timer/src/services/background_service.dart';
+import 'package:norbu_timer/src/services/local_storage_service.dart';
 import 'package:norbu_timer/src/common_widgets/notifications_home_page.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -22,19 +23,21 @@ class App extends StatelessWidget {
       providers: [
         BlocProvider(
             create: (context) => NotificationTimerSettings(
-                notificationService: sl<NotificationService>(), audioPlayer: sl<AudioPlayer>())
+                backgroundService: sl<BackgroundService>(),
+                localStorageService: sl<LocalStorageService>(),
+                audioPlayer: sl<AudioPlayer>())
               ..add(InitSettings()),
             child: TimerScreen()),
       ],
       child: MaterialApp(
-        navigatorKey: sl<GlobalKey>(),
+        navigatorKey: sl<GlobalKey<NavigatorState>>(),
         routes: materialRoutes,
         theme: ThemeData(
           primaryColor: Color.fromRGBO(109, 234, 255, 1),
           accentColor: Color.fromRGBO(72, 74, 126, 1),
           brightness: Brightness.dark,
         ),
-        title: 'Norbu-Timer',
+        title: 'Timer Awareness',
         home: NotificationHomePage(),
       ),
     );

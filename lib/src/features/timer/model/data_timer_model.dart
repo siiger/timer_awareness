@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class DataTimer {
+class DataTimerModel {
   final int intervalSource;
   final int intervalValue;
   final String soundSourcePath;
@@ -8,7 +8,7 @@ class DataTimer {
   final List<String> messages;
   final List<int> timeFrom;
   final List<int> timeUntil;
-  DataTimer({
+  DataTimerModel({
     this.intervalSource,
     this.intervalValue,
     this.soundSourcePath,
@@ -30,14 +30,11 @@ class DataTimer {
     };
   }
 
-  factory DataTimer.fromMap(Map<String, dynamic> map) {
-    List<String> messages =
-        (map['messages'] as List)?.map((item) => item as String)?.toList();
-    List<int> listFrom =
-        (map['timeFrom'] as List)?.map((item) => item as int)?.toList();
-    List<int> listUntil =
-        (map['timeUntil'] as List)?.map((item) => item as int)?.toList();
-    return DataTimer(
+  factory DataTimerModel.fromMap(Map<String, dynamic> map) {
+    List<String> messages = (map['messages'] as List)?.map((item) => item as String)?.toList();
+    List<int> listFrom = (map['timeFrom'] as List)?.map((item) => item as int)?.toList();
+    List<int> listUntil = (map['timeUntil'] as List)?.map((item) => item as int)?.toList();
+    return DataTimerModel(
       intervalSource: map['intervalSource'],
       intervalValue: map['intervalValue'],
       soundSourcePath: map['soundSourcePath'].toString(),
@@ -50,8 +47,7 @@ class DataTimer {
 
   String toJson() => json.encode(toMap());
 
-  factory DataTimer.fromJson(String source) =>
-      DataTimer.fromMap(json.decode(source));
+  factory DataTimerModel.fromJson(String source) => DataTimerModel.fromMap(json.decode(source));
 
   @override
   String toString() {
