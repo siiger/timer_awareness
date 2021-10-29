@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:norbu_timer/main.dart';
 import 'package:norbu_timer/service_locator.dart';
 import 'package:norbu_timer/src/common_widgets/notifications_home_page.dart';
 import 'package:norbu_timer/src/config/routes.dart';
@@ -79,7 +80,7 @@ class NotificationManager {
     targetPage = PAGE_NOTIFICATION_HOME;
     Logger.root.fine('FirebaseMessaging: onSelectNotification: Notification received. Navigate to home.');
     // Avoid to open the notification details page over another details page already opened
-    sl<GlobalKey<NavigatorState>>().currentState.pushNamedAndRemoveUntil(targetPage, (route) => false);
+    navigator.currentState.pushNamedAndRemoveUntil(targetPage, (route) => false);
   }
 
   //if press button
@@ -87,7 +88,7 @@ class NotificationManager {
     String targetPage;
     targetPage = PAGE_SETTINGS;
     //navigator.currentState.pushNamedAndRemoveUntil(targetPage, (route) => false, arguments: "timer0");
-    sl<GlobalKey<NavigatorState>>().currentState.pushNamed(targetPage, arguments: "timer0");
+    navigator.currentState.pushNamed(targetPage, arguments: "timer0");
   }
 
   Future<void> _loadSharedPreferences() async {

@@ -45,7 +45,6 @@ class TimerStringsUtil {
   static const int lengthTaskList = 100;
 
   static const List<int> timeIntervals = [
-    2,
     15,
     20,
     25,

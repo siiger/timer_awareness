@@ -9,6 +9,7 @@ import 'package:norbu_timer/src/services/local_storage_service.dart';
 import 'package:norbu_timer/src/common_widgets/notifications_home_page.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+final GlobalKey<NavigatorState> navigator = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupLocator();
@@ -30,7 +31,7 @@ class App extends StatelessWidget {
             child: TimerScreen()),
       ],
       child: MaterialApp(
-        navigatorKey: sl<GlobalKey<NavigatorState>>(),
+        navigatorKey: navigator,
         routes: materialRoutes,
         theme: ThemeData(
           primaryColor: Color.fromRGBO(109, 234, 255, 1),

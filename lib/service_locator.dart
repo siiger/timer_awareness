@@ -9,13 +9,6 @@ import 'package:background_fetch/background_fetch.dart';
 import 'package:norbu_timer/src/core/utils/date_time_util.dart';
 import 'package:norbu_timer/src/features/timer/model/data_timer_model.dart';
 
-const channelAwarenessDelayedTask = "channelAwarenessDelayedTask";
-const tagAwaTask = "AwaTask";
-const channelAwareness = 'awareness';
-const int idAwa = 1;
-
-final AwesomeNotifications awesomeNotifications = AwesomeNotifications();
-
 GetIt sl = GetIt.instance;
 
 Future<void> setupLocator() async {
@@ -26,10 +19,6 @@ Future<void> setupLocator() async {
 
   final pref = await LocalStorageService.getInstance();
   sl.registerSingleton<LocalStorageService>(pref);
-
-  //
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey();
-  sl.registerSingleton<GlobalKey<NavigatorState>>(navigatorKey);
 
   //
 
