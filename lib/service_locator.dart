@@ -23,6 +23,7 @@ Future<void> setupLocator() async {
   //
 
   final backgroundService = BackgroundService();
+  await backgroundService.init();
   sl.registerSingleton<BackgroundService>(backgroundService);
 
   //

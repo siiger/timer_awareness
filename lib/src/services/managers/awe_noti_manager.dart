@@ -21,8 +21,6 @@ class NotificationManager {
 
   static NotificationManager instance;
 
-  static final AwesomeNotifications awesomeNotifications = AwesomeNotifications();
-
   List<String> timerListMessages;
   List<String> timerListCheckMessages;
   int intervalTimeOfLunchBackgrFetch;
@@ -39,7 +37,7 @@ class NotificationManager {
   String notificationBody;
 
   SharedPreferences preferences;
-  StreamSubscription<ReceivedAction> _actionStream;
+  Stream<ReceivedAction> get actionStream => AwesomeNotifications().actionStream;
 
   static NotificationManager getInstance() {
     return instance;
@@ -52,43 +50,13 @@ class NotificationManager {
   }
 
   Future<void> init() async {
-    await awesomeNotifications.initialize('resource://drawable/res_norbu_notific', []);
+    await AwesomeNotifications().initialize('resource://drawable/res_norbu_notific', []);
 
-    await awesomeNotifications.isNotificationAllowed().then((isAllowed) {
+    await AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
-        awesomeNotifications.requestPermissionToSendNotifications();
+        AwesomeNotifications().requestPermissionToSendNotifications();
       }
     });
-
-    _actionStream = awesomeNotifications.actionStream.listen((receivedNotification) {
-      if (!StringUtils.isNullOrEmpty(receivedNotification.buttonKeyPressed) &&
-          receivedNotification.buttonKeyPressed.startsWith('Settings_')) {
-        processSettingsControls(receivedNotification);
-      } else {
-        processDefaultActionReceived(receivedNotification);
-      }
-    });
-  }
-
-  void dispose() {
-    _actionStream.cancel();
-  }
-
-  //if tap notifications
-  void processDefaultActionReceived(ReceivedAction receivedNotification) {
-    String targetPage;
-    targetPage = PAGE_NOTIFICATION_HOME;
-    Logger.root.fine('FirebaseMessaging: onSelectNotification: Notification received. Navigate to home.');
-    // Avoid to open the notification details page over another details page already opened
-    navigator.currentState.pushNamedAndRemoveUntil(targetPage, (route) => false);
-  }
-
-  //if press button
-  void processSettingsControls(ReceivedAction receivedNotification) {
-    String targetPage;
-    targetPage = PAGE_SETTINGS;
-    //navigator.currentState.pushNamedAndRemoveUntil(targetPage, (route) => false, arguments: "timer0");
-    navigator.currentState.pushNamed(targetPage, arguments: "timer0");
   }
 
   Future<void> _loadSharedPreferences() async {
@@ -158,7 +126,7 @@ class NotificationManager {
     String message,
     DateTime timeOfAppearing,
   }) async {
-    await awesomeNotifications.createNotification(
+    await AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: notiMindfulnessId,
         channelKey: channelMindfulnessKey,
@@ -183,7 +151,7 @@ class NotificationManager {
     if (soundSource < 3) {
       String _soundSourcePath = TimerStringsUtil.soundSourceArray[soundSource];
 
-      await awesomeNotifications.setChannel(NotificationChannel(
+      await AwesomeNotifications().setChannel(NotificationChannel(
         channelKey: channelMindfulnessKey,
         channelName: channelMindfulnessName,
         channelDescription: channelMindfulnessDescription,
@@ -194,7 +162,7 @@ class NotificationManager {
         importance: NotificationImportance.High,
       ));
     } else if (soundSource == 3) {
-      await awesomeNotifications.setChannel(NotificationChannel(
+      await AwesomeNotifications().setChannel(NotificationChannel(
           channelKey: channelMindfulnessKey,
           channelName: channelMindfulnessName,
           channelDescription: channelMindfulnessDescription,
@@ -206,24 +174,24 @@ class NotificationManager {
   }
 
   Future<void> removeChannel(String channelKey) async {
-    await awesomeNotifications.removeChannel(channelKey);
+    await AwesomeNotifications().removeChannel(channelKey);
   }
 
   Future<void> cancelSchedule(int id) async {
-    await awesomeNotifications.cancelSchedule(id);
+    await AwesomeNotifications().cancelSchedule(id);
   }
 
   Future<void> cancelAllSchedules() async {
-    await awesomeNotifications.cancelAllSchedules();
+    await AwesomeNotifications().cancelAllSchedules();
   }
 
   Future<void> cancelNotification(int id) async {
-    await awesomeNotifications.cancel(id);
+    await AwesomeNotifications().cancel(id);
   }
 
   Future<void> cancelNotificationsMindfulness() async {
-    await awesomeNotifications.cancel(notiMindfulnessId);
-    await awesomeNotifications.cancelSchedule(notiMindfulnessId);
-    await awesomeNotifications.removeChannel(channelMindfulnessKey);
+    await AwesomeNotifications().cancel(notiMindfulnessId);
+    await AwesomeNotifications().cancelSchedule(notiMindfulnessId);
+    await AwesomeNotifications().removeChannel(channelMindfulnessKey);
   }
 }

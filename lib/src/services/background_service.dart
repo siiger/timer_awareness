@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:norbu_timer/src/services/managers/awe_noti_manager.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:logging/logging.dart';
@@ -48,6 +49,17 @@ Future<void> notificationCancelTask() async {
 }
 
 class BackgroundService {
+  Stream<ReceivedAction> actionStream;
+
+  Future<void> init() async {
+    NotificationManager manager = NotificationManager.instance;
+    if (manager == null) {
+      manager = new NotificationManager();
+      await manager.init();
+    }
+    actionStream = manager.actionStream;
+  }
+
   Future<void> setupBackgroundTask({
     int intervalValue,
   }) async {
