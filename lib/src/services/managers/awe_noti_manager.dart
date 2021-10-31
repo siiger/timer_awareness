@@ -51,7 +51,7 @@ class NotificationManager {
   }
 
   Future<void> _init() async {
-    await AwesomeNotifications().initialize('resource://drawable/res_ic_launcher_foreground', []);
+    await AwesomeNotifications().initialize('resource://drawable/res_app_icon', []);
 
     await AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
