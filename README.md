@@ -1,4 +1,4 @@
-# norbu_timer
+# Timer
 
 A new Flutter project.
 
