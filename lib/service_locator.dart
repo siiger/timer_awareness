@@ -1,13 +1,8 @@
 import 'package:get_it/get_it.dart';
-import 'package:flutter/material.dart';
 import 'package:norbu_timer/src/services/background_service.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:norbu_timer/src/services/local_storage_service.dart';
 import 'package:background_fetch/background_fetch.dart';
-import 'package:norbu_timer/src/core/utils/date_time_util.dart';
-import 'package:norbu_timer/src/features/timer/model/data_timer_model.dart';
 
 GetIt sl = GetIt.instance;
 
@@ -21,9 +16,7 @@ Future<void> setupLocator() async {
   sl.registerSingleton<LocalStorageService>(pref);
 
   //
-
-  final backgroundService = BackgroundService();
-  await backgroundService.init();
+  final backgroundService = await BackgroundService.getInstance();
   sl.registerSingleton<BackgroundService>(backgroundService);
 
   //

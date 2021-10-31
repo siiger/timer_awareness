@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:norbu_timer/src/config/themes.dart';
 import 'package:norbu_timer/src/features/timer/blocs/bloc_timer_settings/timer_settings_bloc.dart';
 import 'package:norbu_timer/src/features/timer/timer_screen.dart';
 import 'package:norbu_timer/src/config/routes.dart';
@@ -11,8 +13,21 @@ import 'package:norbu_timer/src/services/background_service.dart';
 import 'package:norbu_timer/src/services/local_storage_service.dart';
 import 'package:norbu_timer/src/common_widgets/notifications_home_page.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:logging/logging.dart';
+
+ListQueue<String> debugMessages = ListQueue();
 
 void main() async {
+  Logger.root.level = Level.ALL; // defaults to Level.INFO
+  Logger.root.onRecord.listen((record) {
+    final debugMessagePrint = '[app: ${record.loggerName}] ${record.message}';
+    final debugMessageQueue = '${record.time} ${record.loggerName}: ${record.message}';
+    debugPrint(debugMessagePrint);
+    debugMessages.add(debugMessageQueue);
+    if (debugMessages.length > 200) {
+      debugMessages.removeFirst();
+    }
+  });
   WidgetsFlutterBinding.ensureInitialized();
   await setupLocator();
   runApp(App());
@@ -34,7 +49,7 @@ class _AppState extends State<App> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-            create: (context) => NotificationTimerSettings(
+            create: (context) => TimerSettingsBloc(
                 backgroundService: sl<BackgroundService>(),
                 localStorageService: sl<LocalStorageService>(),
                 audioPlayer: sl<AudioPlayer>())
@@ -43,8 +58,9 @@ class _AppState extends State<App> {
       ],
       child: MaterialApp(
         builder: (BuildContext context, Widget child) {
-          // подписываемся на события перехода с уведомления
-          _onSelectNotificationStreamSubscr ??= sl<BackgroundService>().actionStream.listen(_onReceiveNotification);
+          // Subscribe to the transition events from notification
+          _onSelectNotificationStreamSubscr ??=
+              sl<BackgroundService>().notificationActionStream.listen(_onReceiveNotification);
           final MediaQueryData data = MediaQuery.of(context);
           return MediaQuery(
             data: data.copyWith(textScaleFactor: 1.0),
@@ -53,11 +69,7 @@ class _AppState extends State<App> {
         },
         navigatorKey: _navigator,
         routes: materialRoutes,
-        theme: ThemeData(
-          primaryColor: Color.fromRGBO(109, 234, 255, 1),
-          accentColor: Color.fromRGBO(72, 74, 126, 1),
-          brightness: Brightness.dark,
-        ),
+        theme: kShrineTheme,
         title: 'Timer Awareness',
         initialRoute: PAGE_NOTIFICATION_HOME,
       ),
@@ -77,7 +89,6 @@ class _AppState extends State<App> {
       _navigator.currentState.pushNamedAndRemoveUntil(
         PAGE_SETTINGS,
         (route) => (route.settings.name != PAGE_SETTINGS) || route.isFirst,
-        arguments: "timer0",
       );
     } else {
       //if tap notifications

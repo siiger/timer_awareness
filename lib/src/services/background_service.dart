@@ -29,35 +29,29 @@ void _onBackgroundFetchTimeout(String taskId) {
   BackgroundFetch.finish(taskId);
 }
 
-Future<void> notificationUpdateTask() async {
-  NotificationManager manager = NotificationManager.instance;
-  if (manager == null) {
-    manager = new NotificationManager();
-    await manager.init();
-  }
-
+Future<bool> notificationUpdateTask() async {
+  final NotificationManager manager = await NotificationManager.getInstance();
   manager.updateNotifications();
   return Future.value(true);
 }
 
-Future<void> notificationCancelTask() async {
-  NotificationManager manager = NotificationManager.instance;
-  if (manager != null) {
-    await manager.cancelNotificationsMindfulness();
-  }
+Future<bool> notificationCancelTask() async {
+  final NotificationManager manager = await NotificationManager.getInstance();
+  await manager.cancelNotifications();
   return Future.value(true);
 }
 
 class BackgroundService {
-  Stream<ReceivedAction> actionStream;
+  Stream<ReceivedAction> notificationActionStream;
+  static BackgroundService _instance;
 
-  Future<void> init() async {
-    NotificationManager manager = NotificationManager.instance;
-    if (manager == null) {
-      manager = new NotificationManager();
-      await manager.init();
+  static Future<BackgroundService> getInstance() async {
+    if (_instance == null) {
+      _instance = BackgroundService();
+      final NotificationManager manager = await NotificationManager.getInstance();
+      _instance.notificationActionStream = manager.actionStream;
     }
-    actionStream = manager.actionStream;
+    return _instance;
   }
 
   Future<void> setupBackgroundTask({
@@ -85,7 +79,6 @@ class BackgroundService {
     } catch (e) {
       //print("[BackgroundFetch] configure ERROR: $e");
     }
-    //_log.fine('Schedule notification at $notificationDateTime');
   }
 
   Future<void> cancelBackgroundTask() async {

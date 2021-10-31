@@ -5,25 +5,23 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
 import 'package:equatable/equatable.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:norbu_timer/src/services/background_service.dart';
 import 'package:norbu_timer/src/features/timer/util/timer_strings_util.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:norbu_timer/service_locator.dart';
 import 'package:norbu_timer/src/services/local_storage_service.dart';
 
 part 'timer_settings_event.dart';
 part 'timer_settings_state.dart';
 
-class NotificationTimerSettings extends Bloc<TimerSettingsEvent, TimerSettingsState> {
+class TimerSettingsBloc extends Bloc<TimerSettingsEvent, TimerSettingsState> {
   final BackgroundService _backgroundService;
   final LocalStorageService _localStorageService;
   final AudioPlayer _audioPlayer;
 
-  NotificationTimerSettings({
+  TimerSettingsBloc({
     @required BackgroundService backgroundService,
     @required AudioPlayer audioPlayer,
     @required LocalStorageService localStorageService,

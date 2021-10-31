@@ -41,7 +41,7 @@ class TimerScreen extends StatelessWidget {
 class _AcceptSwitchButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
+    return BlocBuilder<TimerSettingsBloc, TimerSettingsState>(
         buildWhen: (previous, current) => previous.isActive != current.isActive,
         builder: (context, state) {
           return Center(
@@ -53,8 +53,7 @@ class _AcceptSwitchButton extends StatelessWidget {
                 Center(
                   child: Switch(
                     value: state.isActive,
-                    onChanged: (value) =>
-                        BlocProvider.of<NotificationTimerSettings>(context).add(ToggleNotificationService()),
+                    onChanged: (value) => BlocProvider.of<TimerSettingsBloc>(context).add(ToggleNotificationService()),
                     activeTrackColor: Colors.grey,
                     activeColor: Colors.amber,
                   ),
@@ -67,7 +66,7 @@ class _AcceptSwitchButton extends StatelessWidget {
 class _MessagesTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
+    return BlocBuilder<TimerSettingsBloc, TimerSettingsState>(
         buildWhen: (previous, current) =>
             previous.messages != current.messages || previous.checkMessages != current.checkMessages,
         builder: (context, state) {
@@ -85,7 +84,7 @@ class _MessagesTextField extends StatelessWidget {
                         Checkbox(
                           value: state.checkMessages.contains(index.toString()),
                           onChanged: (value) =>
-                              BlocProvider.of<NotificationTimerSettings>(context).add(CheckMessage(index: index)),
+                              BlocProvider.of<TimerSettingsBloc>(context).add(CheckMessage(index: index)),
                         ),
                         Container(
                             width: 220,
@@ -103,7 +102,7 @@ class _MessagesTextField extends StatelessWidget {
                               onChanged: (String val) => EasyDebounce.debounce(
                                   'mess-debouncer',
                                   Duration(milliseconds: 1000),
-                                  () => BlocProvider.of<NotificationTimerSettings>(context)
+                                  () => BlocProvider.of<TimerSettingsBloc>(context)
                                       .add(ChangedMessages(message: val, index: index))),
                             ))
                       ]),
@@ -115,7 +114,7 @@ class _MessagesTextField extends StatelessWidget {
 class _IntervalTimeRadioButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
+    return BlocBuilder<TimerSettingsBloc, TimerSettingsState>(
         buildWhen: (previous, current) =>
             previous.intervalSource != current.intervalSource ||
             previous.preciseInterval != current.preciseInterval ||
@@ -145,8 +144,8 @@ class _IntervalTimeRadioButtons extends StatelessWidget {
                               Radio<int>(
                                 value: index,
                                 groupValue: state.intervalSource,
-                                onChanged: (value) => BlocProvider.of<NotificationTimerSettings>(context)
-                                    .add(ToggleIntervalSource(value: value)),
+                                onChanged: (value) =>
+                                    BlocProvider.of<TimerSettingsBloc>(context).add(ToggleIntervalSource(value: value)),
                               ),
                             ]),
                     ],
@@ -180,11 +179,11 @@ class _IntervalTimeRadioButtons extends StatelessWidget {
                     divisions: TimerStringsUtil.timeIntervals.length - 1,
                     label: TimerStringsUtil.showStringTime(state.currentSliderVolume.round()),
                     onChanged: (double value) =>
-                        BlocProvider.of<NotificationTimerSettings>(context).add(ChangedSliderVolume(volume: value)),
+                        BlocProvider.of<TimerSettingsBloc>(context).add(ChangedSliderVolume(volume: value)),
                     onChangeEnd: (double value) => EasyDebounce.debounce(
                         'slider-debouncer',
                         Duration(milliseconds: 3000),
-                        () => BlocProvider.of<NotificationTimerSettings>(context)
+                        () => BlocProvider.of<TimerSettingsBloc>(context)
                             .add(ChangedPreciseInterval(interval: value.toInt()))),
                   )),
                 ]),
@@ -196,7 +195,7 @@ class _IntervalTimeRadioButtons extends StatelessWidget {
 class _SoundSourceRadioButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
+    return BlocBuilder<TimerSettingsBloc, TimerSettingsState>(
         buildWhen: (previous, current) => previous.soundSource != current.soundSource,
         builder: (context, state) {
           return Center(
@@ -214,8 +213,8 @@ class _SoundSourceRadioButtons extends StatelessWidget {
                           Radio<int>(
                             value: index,
                             groupValue: state.soundSource,
-                            onChanged: (value) => BlocProvider.of<NotificationTimerSettings>(context)
-                                .add(ToggleSoundSource(value: value)),
+                            onChanged: (value) =>
+                                BlocProvider.of<TimerSettingsBloc>(context).add(ToggleSoundSource(value: value)),
                           ),
                           Text(TimerStringsUtil.soundMode[index].toString())
                         ]),
@@ -230,20 +229,16 @@ class _SoundSourceRadioButtons extends StatelessWidget {
 class _TurnOffCheckboxes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NotificationTimerSettings, TimerSettingsState>(
-        buildWhen: (previous, current) =>
-            previous.isFlightMode != current.isFlightMode ||
-            previous.isCallingMode != current.isCallingMode ||
-            previous.isSilentMode != current.isSilentMode ||
-            previous.isMusicPlaying != current.isMusicPlaying ||
-            previous.isTimeOff != current.isTimeOff,
+    return BlocBuilder<TimerSettingsBloc, TimerSettingsState>(
+        buildWhen: (previous, current) => previous.isTimeOff != current.isTimeOff,
         builder: (context, state) {
           final DateTime now = DateTime.now();
           return Center(
             child: Column(
               children: [
                 Center(
-                    child: const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 10), child: Text('Do not show when'))),
+                    child:
+                        const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 10), child: Text('Don\u0027t show when'))),
                 /*CheckboxListTile(
                   title: Text('Flight mode'),
                   controlAffinity: ListTileControlAffinity.leading,
@@ -280,8 +275,7 @@ class _TurnOffCheckboxes extends StatelessWidget {
                 Row(crossAxisAlignment: CrossAxisAlignment.center, mainAxisAlignment: MainAxisAlignment.end, children: [
                   Checkbox(
                     value: state.isTimeOff,
-                    onChanged: (value) =>
-                        BlocProvider.of<NotificationTimerSettings>(context).add(ToggleOffTimePerDay()),
+                    onChanged: (value) => BlocProvider.of<TimerSettingsBloc>(context).add(ToggleOffTimePerDay()),
                   ),
                   Expanded(
                       child: DateTimeField(
@@ -301,7 +295,7 @@ class _TurnOffCheckboxes extends StatelessWidget {
                       );
                       return DateTimeField.convert(time);
                     },
-                    onChanged: (newValue) => BlocProvider.of<NotificationTimerSettings>(context)
+                    onChanged: (newValue) => BlocProvider.of<TimerSettingsBloc>(context)
                         .add(ChangedTimeOffFrom(timeFrom: TimeOfDay(hour: newValue.hour, minute: newValue.minute))),
                   )),
                   Text('  -  '),
@@ -323,7 +317,7 @@ class _TurnOffCheckboxes extends StatelessWidget {
                       );
                       return DateTimeField.convert(time);
                     },
-                    onChanged: (newValue) => BlocProvider.of<NotificationTimerSettings>(context)
+                    onChanged: (newValue) => BlocProvider.of<TimerSettingsBloc>(context)
                         .add(ChangedTimeOffUntil(timeUntil: TimeOfDay(hour: newValue.hour, minute: newValue.minute))),
                   )),
                 ]),

@@ -3,23 +3,20 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:norbu_timer/main.dart';
-import 'package:norbu_timer/service_locator.dart';
-import 'package:norbu_timer/src/common_widgets/notifications_home_page.dart';
-import 'package:norbu_timer/src/config/routes.dart';
 import 'package:norbu_timer/src/core/utils/date_time_util.dart';
-import 'package:norbu_timer/src/features/timer/timer_screen.dart';
 import 'package:norbu_timer/src/features/timer/util/timer_strings_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logging/logging.dart';
 
 class NotificationManager {
   static const int notiMindfulnessId = 0;
-  static const String channelMindfulnessKey = 'Mindfulness';
-  static const String channelMindfulnessName = 'Norbu_Timer';
+  static const String channelMindfulnessKey = 'Awareness';
+  static const String channelMindfulnessName = 'Awareness_Timer';
   static const String channelMindfulnessDescription = 'Timer settinings';
 
-  static NotificationManager instance;
+  static NotificationManager _instance;
+
+  final _log = Logger('NotificationService');
 
   List<String> timerListMessages;
   List<String> timerListCheckMessages;
@@ -39,18 +36,22 @@ class NotificationManager {
   SharedPreferences preferences;
   Stream<ReceivedAction> get actionStream => AwesomeNotifications().actionStream;
 
-  static NotificationManager getInstance() {
-    return instance;
+  static Future<NotificationManager> getInstance() async {
+    if (_instance == null) {
+      _instance = NotificationManager();
+      await _instance._init();
+    }
+    return _instance;
   }
 
   NotificationManager() {
-    if (instance != null) throw new Exception(["_EXC_"]);
+    if (_instance != null) throw new Exception(["_EXC_"]);
 
-    instance = this;
+    _instance = this;
   }
 
-  Future<void> init() async {
-    await AwesomeNotifications().initialize('resource://drawable/res_norbu_notific', []);
+  Future<void> _init() async {
+    await AwesomeNotifications().initialize('resource://drawable/res_ic_launcher_foreground', []);
 
     await AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
@@ -143,6 +144,7 @@ class NotificationManager {
       ],
       schedule: NotificationCalendar.fromDate(date: timeOfAppearing.toUtc()),
     );
+    _log.fine('Schedule notification at $timeOfAppearing');
   }
 
   Future<void> _setChannelSpecific({
@@ -189,7 +191,7 @@ class NotificationManager {
     await AwesomeNotifications().cancel(id);
   }
 
-  Future<void> cancelNotificationsMindfulness() async {
+  Future<void> cancelNotifications() async {
     await AwesomeNotifications().cancel(notiMindfulnessId);
     await AwesomeNotifications().cancelSchedule(notiMindfulnessId);
     await AwesomeNotifications().removeChannel(channelMindfulnessKey);
