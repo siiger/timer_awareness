@@ -47,7 +47,7 @@ class _NotificationHomePageState extends State<NotificationHomePage> {
         padding: EdgeInsets.only(top: 40.0),
         children: <Widget>[
           SizedBox(height: 30),
-          Center(child: Text('HOME')),
+          Center(child: Text('HOME', style:TextStyle(fontSize:24.0))),
           SizedBox(height: 30),
           RaisedButton(
               child: Text(
@@ -59,7 +59,9 @@ class _NotificationHomePageState extends State<NotificationHomePage> {
               textColor: Colors.black,
               onPressed: () => Navigator.pushNamed(context, PAGE_SETTINGS)),
         ],
-      ),
+      ) , 
+      BackgroundColor: const Color(0xFF1a1c24), 
+      
     );
   }
 }
