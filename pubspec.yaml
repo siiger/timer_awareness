@@ -55,3 +55,6 @@ flutter:
     - assets/res_rhy_bre_sound1_emp.mp3
     - assets/res_rhy_bre_sound2_inh.mp3
   
+#dependency_overrides:
+#  platform: ^3.1.0
+
