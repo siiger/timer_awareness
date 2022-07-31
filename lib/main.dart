@@ -84,13 +84,26 @@ class _AppState extends State<App> {
 
   void _onReceiveNotification(ReceivedAction receivedNotification) {
     if (!StringUtils.isNullOrEmpty(receivedNotification.buttonKeyPressed) &&
-        receivedNotification.buttonKeyPressed.startsWith('Settings_')) {
-      //if press button on settings notification
+        receivedNotification.buttonKeyPressed.startsWith('Noname_')) {
       _navigator.currentState.pushNamedAndRemoveUntil(
         PAGE_SETTINGS,
         (route) => (route.settings.name != PAGE_SETTINGS) || route.isFirst,
       );
-    } else {
+    }
+    else if (!StringUtils.isNullOrEmpty(receivedNotification.buttonKeyPressed) &&
+        receivedNotification.buttonKeyPressed.startsWith('Settings_')
+
+    ) {
+      //if press button on settings notification
+
+      _navigator.currentState.pushNamedAndRemoveUntil(
+        PAGE_NO,
+            (route) => (route.settings.name != PAGE_NO) || route.isFirst,
+      );
+
+    }
+
+    else {
       //if tap notifications
       _navigator.currentState.pushNamedAndRemoveUntil(
         PAGE_NOTIFICATION_HOME,

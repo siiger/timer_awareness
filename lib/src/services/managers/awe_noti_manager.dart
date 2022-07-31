@@ -31,10 +31,13 @@ class NotificationManager {
   bool isTimerTimeOff;
   int timerSoundSource;
   String notificationLabelButton;
+  String nonameLabelButton;
   String notificationBody;
 
   SharedPreferences preferences;
   Stream<ReceivedAction> get actionStream => AwesomeNotifications().actionStream;
+
+  set nonameLabelButtonButton(String nonameLabelButtonButton) {}
 
   static Future<NotificationManager> getInstance() async {
     if (_instance == null) {
@@ -80,6 +83,7 @@ class NotificationManager {
     this.isTimerTimeOff = preferences.getBool('isTimeOff');
     this.timerSoundSource = preferences.getInt('soundSource');
     this.notificationLabelButton = preferences.getString('notificationLabelButton');
+    this.nonameLabelButtonButton = preferences.getString('nonameLabelButton');
     this.notificationBody = preferences.getString('notificationBody');
   }
 
@@ -137,6 +141,12 @@ class NotificationManager {
       actionButtons: [
         NotificationActionButton(
           key: 'Settings_Timer',
+          label: this.nonameLabelButton,
+          autoCancel: true,
+          buttonType: ActionButtonType.Default,
+        ),
+        NotificationActionButton(
+          key: 'Noname_screen',
           label: this.notificationLabelButton,
           autoCancel: true,
           buttonType: ActionButtonType.Default,

@@ -12,19 +12,19 @@ import 'package:progressive_image/progressive_image.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:norbu_timer/src/config/routes.dart';
 
-class NotificationHomePage extends StatefulWidget {
+class NonamePage extends StatefulWidget {
   //String get results => receivedNotification.toString();
   //final ReceivedNotification receivedNotification;
 
-  final String title = 'Notification Home';
+  final String title = 'Noname';
 
-  NotificationHomePage();
+  NonamePage();
 
   @override
-  _NotificationHomePageState createState() => _NotificationHomePageState();
+  _NonamePageState createState() => _NonamePageState();
 }
 
-class _NotificationHomePageState extends State<NotificationHomePage> {
+class _NonamePageState extends State<NonamePage> {
   String displayedDate = '';
 
   @override
@@ -47,17 +47,17 @@ class _NotificationHomePageState extends State<NotificationHomePage> {
         padding: EdgeInsets.only(top: 40.0),
         children: <Widget>[
           SizedBox(height: 30),
-          Center(child: Text('HOME')),
+          Center(child: Text('Noname')),
           SizedBox(height: 30),
           RaisedButton(
               child: Text(
-                'Noname page',
+                'Timer Settings',
                 //state.isRealTimeMode ? "Stop" : "Run",
                 style: TextStyle(fontSize: 16),
               ),
               color: Colors.blueGrey,
               textColor: Colors.black,
-              onPressed: () => Navigator.pushNamed(context, PAGE_NO)),
+              onPressed: () => Navigator.pushNamed(context, PAGE_SETTINGS)),
         ],
       ),
     );
