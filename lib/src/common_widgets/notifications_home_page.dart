@@ -53,9 +53,9 @@ class _NotificationHomePageState extends State<NotificationHomePage> {
               child: Text(
                 'Timer Settings',
                 //state.isRealTimeMode ? "Stop" : "Run",
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 24),
               ),
-              color: Colors.blueGrey,
+              color: Color(0xff1a1c24),
               textColor: Colors.black,
               onPressed: () => Navigator.pushNamed(context, PAGE_SETTINGS)),
         ],
